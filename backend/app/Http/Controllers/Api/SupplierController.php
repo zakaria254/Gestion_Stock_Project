@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Http\Requests\StoreUpdateSupplierRequest;
+use App\Http\Resources\SupplierResource;
+use App\Models\Supplier;
 
 class SupplierController extends Controller
 {
@@ -12,15 +14,20 @@ class SupplierController extends Controller
      */
     public function index()
     {
-        //
+        $suppliers = Supplier::latest()->paginate(12);
+        
+        return SupplierResource::collection($suppliers);
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreUpdateSupplierRequest $request)
     {
-        //
+        $validated = $request->validated();
+        $supplier = Supplier::create($validated);
+
+        return (new SupplierResource($supplier))->response()->setStatusCode(201);
     }
 
     /**
@@ -34,16 +41,21 @@ class SupplierController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(StoreUpdateSupplierRequest $request, Supplier $supplier)
     {
-        //
+        $validated = $request->validated();
+        $supplier->update($validated);
+
+        return new SupplierResource($supplier);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Supplier $supplier)
     {
-        //
+        $supplier->delete();
+
+        return response()->noContent();
     }
 }
