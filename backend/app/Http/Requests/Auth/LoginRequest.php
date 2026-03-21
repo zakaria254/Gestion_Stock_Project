@@ -48,7 +48,7 @@ class LoginRequest extends FormRequest
         $user = User::where('email', $this->input('email'))->first();
 
         // Then verify the access_code using Hash::check()
-        if (! $user || ! $this->input('access_code') !== $user->access_code) {
+        if (! $user || $this->input('access_code') !== $user->access_code) {
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
