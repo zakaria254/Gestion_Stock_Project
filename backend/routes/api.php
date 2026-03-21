@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\SupplierController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use Illuminate\Http\Request;
@@ -13,4 +14,8 @@ Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::apiResource('users', UserController::class)->middleware('auth:sanctum');
+// routes only admin can access 
+Route::middleware(['auth:sanctum', 'can:admin_access'])->group(function () {
+    Route::apiResource('users', UserController::class);
+    Route::apiResource('suppliers', SupplierController::class);
+});

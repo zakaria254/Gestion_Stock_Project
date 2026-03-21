@@ -7,7 +7,7 @@ use App\Http\Requests\StoreUpdateUserRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Gate;
+
 
 class UserController extends Controller
 {
@@ -16,12 +16,6 @@ class UserController extends Controller
      */
     public function index(Request $request)
     {
-        if (Gate::denies('admin_access')) {
-            return response()->json([
-                "message" => "you are not authorized !!"
-            ], 403);
-        }
-
         $query = User::query();
 
         if ($request->filled('status')) {
@@ -39,12 +33,6 @@ class UserController extends Controller
      */
     public function store(StoreUpdateUserRequest $request)
     {
-        if (Gate::denies('admin_access')) {
-            return response()->json([
-                "message" => "you are not authorized !!"
-            ], 403);
-        }
-
         $validated = $request->validated();
         $user = User::create($validated);
         
@@ -57,12 +45,6 @@ class UserController extends Controller
      */
     public function update(StoreUpdateUserRequest $request, User $user)
     {
-        if (Gate::denies('admin_access')) {
-            return response()->json([
-                "message" => "you are not authorized !!"
-            ], 403);
-        }
-
         $validated = $request->validated();
         $user->update($validated);
 
@@ -73,13 +55,7 @@ class UserController extends Controller
      * Remove the specified resource from storage.
      */
     public function destroy(User $user)
-    {
-        if (Gate::denies('admin_access')) {
-            return response()->json([
-                "message" => "you are not authorized !!"
-            ], 403);
-        }
-        
+    {   
         $user->delete();
 
         return response()->json([], 204);
