@@ -35,7 +35,7 @@ class UserController extends Controller
         $validated = $request->validated();
         $user = User::create($validated);
         
-        return new UserResource($user);
+        return (new UserResource($user))->response()->setStatusCode(201);
     }
 
 
