@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\ClientController;
 use App\Http\Controllers\Api\SupplierController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
@@ -18,4 +19,5 @@ Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
 Route::middleware(['auth:sanctum', 'can:admin_access'])->group(function () {
     Route::apiResource('users', UserController::class);
     Route::apiResource('suppliers', SupplierController::class);
+    Route::apiResource('clients', ClientController::class);
 });
