@@ -18,4 +18,8 @@ class Article extends Model
         'categorie',
         'seuil_minimum',
     ];
+
+    public function production_lots () {
+        return $this->hasMany(ProductionLot::class);
+    }
 }

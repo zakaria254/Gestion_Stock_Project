@@ -2,6 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Models\Article;
+use App\Models\ProductionLot;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -15,7 +17,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        User::factory(10)->create();
+        // User::factory(10)->create();
 
         // User::create([
         //     'nom' => 'admin1',
@@ -25,5 +27,12 @@ class DatabaseSeeder extends Seeder
         //     'role' => 'admin',
         //     'status' => 'active',
         // ]);
+
+        // create 2 production lots for each existing article
+        Article::all()->each(function ($article) {
+            ProductionLot::factory(2)->create([
+                'article_id' => $article->id,
+            ]);
+        });
     }
 }
