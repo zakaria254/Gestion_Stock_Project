@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\ArticleController;
 use App\Http\Controllers\Api\ClientController;
 use App\Http\Controllers\Api\SupplierController;
 use App\Http\Controllers\Api\UserController;
@@ -20,4 +21,5 @@ Route::middleware(['auth:sanctum', 'can:admin_access'])->group(function () {
     Route::apiResource('users', UserController::class);
     Route::apiResource('suppliers', SupplierController::class);
     Route::apiResource('clients', ClientController::class);
+    Route::apiResource('articles', ArticleController::class);
 });
