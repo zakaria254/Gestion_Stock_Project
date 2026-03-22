@@ -17,9 +17,22 @@ Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
 });
 
 // routes only admin can access 
-Route::middleware(['auth:sanctum', 'can:admin_access'])->group(function () {
+Route::middleware(['auth:sanctum', 'can:admin_only'])->group(function () {
     Route::apiResource('users', UserController::class);
-    Route::apiResource('suppliers', SupplierController::class);
+    Route::apiResource('suppliers', SupplierController::class);    
+});
+
+// routes admin and ventes can access
+Route::middleware(['auth:sanctum', 'can:ventes_admin_access'])->group(function () {
     Route::apiResource('clients', ClientController::class);
-    Route::apiResource('articles', ArticleController::class);
+});
+
+// routes admin and stock can access 
+Route::middleware(['auth:sanctum', 'can:stock_admin_access'])->group(function () {
+    
+});
+
+// articles routes admin stock and ventes can access
+Route::middleware(['auth:sanctum', 'can:manage_articles'])->group(function () {
+   Route::apiResource('articles', ArticleController::class); 
 });

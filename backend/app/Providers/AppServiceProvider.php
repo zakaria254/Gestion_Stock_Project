@@ -25,8 +25,20 @@ class AppServiceProvider extends ServiceProvider
             return config('app.frontend_url')."/password-reset/$token?email={$notifiable->getEmailForPasswordReset()}";
         });
 
-        Gate::define('admin_access', function ($user) {
+        Gate::define('admin_only', function ($user) {
             return $user && $user->role === "admin" ;
+        });
+
+        Gate::define('ventes_admin_access', function ($user) {
+            return $user && in_array($user->role, ["admin", "ventes"]);
+        });
+
+        Gate::define('stock_admin_access', function ($user) {
+            return $user && in_array($user->role, ["admin", "stock"]);
+        });
+
+        Gate::define('manage_articles', function ($user) {
+            return $user && in_array($user->role, ["admin", "ventes", "stock"]);
         });
     }
 }
