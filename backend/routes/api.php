@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\ArticleController;
 use App\Http\Controllers\Api\ClientController;
+use App\Http\Controllers\Api\ProductionLotController;
 use App\Http\Controllers\Api\SupplierController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
@@ -19,7 +20,8 @@ Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
 // routes only admin can access 
 Route::middleware(['auth:sanctum', 'can:admin_only'])->group(function () {
     Route::apiResource('users', UserController::class);
-    Route::apiResource('suppliers', SupplierController::class);    
+    Route::apiResource('suppliers', SupplierController::class);
+    Route::apiResource('production_lots', ProductionLotController::class);   
 });
 
 // routes admin and ventes can access
