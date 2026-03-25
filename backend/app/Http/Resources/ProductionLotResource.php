@@ -18,7 +18,7 @@ class ProductionLotResource extends JsonResource
             'id' => $this->id,
             'numero_lot' => $this->numero_lot,
             'article-id' => $this->article_id,
-            //format the articles using ArticleResource and safely ignore ir when loading fails
+            //format the articles using ArticleResource and safely ignore it when loading fails
             'article' => new ArticleResource($this->whenLoaded('article')),
             'quantite' => $this->quantite,
             'status' => $this->status,
