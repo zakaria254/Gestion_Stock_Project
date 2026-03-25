@@ -22,4 +22,8 @@ class Article extends Model
     public function production_lots () {
         return $this->hasMany(ProductionLot::class);
     }
+
+    public function stock () {
+        return $this->hasOne(Stock::class);
+    }
 }

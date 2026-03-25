@@ -14,6 +14,6 @@ class ProductionLotSeeder extends Seeder
     public function run(): void
     {
         //create 10 new production lots and 10 new articles linked back to each lot automatically
-        ProductionLot::factory(2)->create();
+        ProductionLot::factory(10)->create();
     }
 }
