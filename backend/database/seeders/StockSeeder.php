@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Models\Article;
 use App\Models\Stock;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class StockSeeder extends Seeder
@@ -13,6 +13,12 @@ class StockSeeder extends Seeder
      */
     public function run(): void
     {
-        Stock::factory(10)->create();
+        Article::chunk(100, function ($articles) {
+            foreach ($articles as $article) {
+                Stock::factory()->create([
+                    'article_id' => $article->id,
+                ]);
+            }  
+        });
     }
 }

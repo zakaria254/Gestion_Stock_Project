@@ -20,7 +20,7 @@ class StockFactory extends Factory
     {
         return [
             'article_id' => Article::factory(),
-            'stock_actuel' => fake()->randomFloat(2, 0,250),
+            'stock_actuel' => fake()->randomFloat(2, 0,100),
             'seuil_minimun' => fake()->numberBetween(10,30),
         ];
     }

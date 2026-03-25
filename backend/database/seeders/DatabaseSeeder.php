@@ -2,10 +2,10 @@
 
 namespace Database\Seeders;
 
-use App\Models\Article;
-use App\Models\ProductionLot;
-use App\Models\Stock;
-use App\Models\User;
+// use App\Models\Article;
+// use App\Models\ProductionLot;
+// use App\Models\Stock;
+// use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -30,17 +30,17 @@ class DatabaseSeeder extends Seeder
         // ]);
 
         // create 2 production lots for each existing article
-        Article::chunk(100, function ($articles) {
-            foreach ($articles as $article) {
-                // ProductionLot::factory(2)->create([
-                //     'article_id' => $article->id,
-                // ]);
+        // Article::chunk(100, function ($articles) {
+        //     foreach ($articles as $article) {
+        //         ProductionLot::factory(2)->create([
+        //             'article_id' => $article->id,
+        //         ]);
 
-                Stock::factory()->create([
-                    'article_id' => $article->id,
-                ]);
-            }  
-        }); 
+        //         Stock::factory()->create([
+        //             'article_id' => $article->id,
+        //         ]);
+        //     }  
+        // }); 
     }
 }
 
