@@ -20,20 +20,7 @@ export default function LoginPage() {
     try {
       const result = await login(email, accessCode)
       if (result.success) {
-        // Redirection selon le rôle
-        switch (result.user.role) {
-          case 'ADMIN':
-            navigate('/dashboard')
-            break
-          case 'SALES':
-            navigate('/sales')
-            break
-          case 'STOCK':
-            navigate('/production')
-            break
-          default:
-            navigate('/dashboard')
-        }
+        navigate('/dashboard')
       } else {
         setError(result.message)
       }

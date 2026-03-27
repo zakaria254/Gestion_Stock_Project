@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react'
-import { authService } from '../services/api'
+import { authService } from '../services/auth'
 
 const AuthContext = createContext(null)
 
@@ -21,6 +21,7 @@ export function AuthProvider({ children }) {
     if (result.success) {
       setUser(result.user)
       localStorage.setItem('user', JSON.stringify(result.user))
+      if (result.token) localStorage.setItem('token', result.token)
     }
     return result
   }
@@ -29,6 +30,7 @@ export function AuthProvider({ children }) {
     await authService.logout()
     setUser(null)
     localStorage.removeItem('user')
+    localStorage.removeItem('token')
   }
 
   const value = {
