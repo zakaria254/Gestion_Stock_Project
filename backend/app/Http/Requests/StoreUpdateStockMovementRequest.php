@@ -25,7 +25,7 @@ class StoreUpdateStockMovementRequest extends FormRequest
         return [
             'stock_id' => 'required|exists:stocks,id',
             'type' => 'required|in:in,out',
-            'quantite' => 'required|decimal:2|gt:0',
+            'quantite' => 'required|decimal:0,2|gt:0',
             'motif' => 'required|string|max:99'
         ];
     }
