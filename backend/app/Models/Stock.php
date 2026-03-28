@@ -20,4 +20,8 @@ class Stock extends Model
     public function article () {
         return $this->belongsTo(Article::class);
     }
+
+    public function stock_movements () {
+        return $this->hasMany(StockMovement::class);
+    }
 }
