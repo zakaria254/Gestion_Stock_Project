@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\ArticleController;
 use App\Http\Controllers\Api\ClientController;
 use App\Http\Controllers\Api\ProductionLotController;
 use App\Http\Controllers\Api\StockController;
+use App\Http\Controllers\Api\StockMovementController;
 use App\Http\Controllers\Api\SupplierController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
@@ -33,6 +34,7 @@ Route::middleware(['auth:sanctum', 'can:ventes_admin_access'])->group(function (
 // routes admin and stock can access 
 Route::middleware(['auth:sanctum', 'can:stock_admin_access'])->group(function () {
     Route::get('/stock', [StockController::class, 'index'])->name('stock');
+    Route::apiResource('movements', StockMovementController::class);
 });
 
 // articles routes admin stock and ventes can access
