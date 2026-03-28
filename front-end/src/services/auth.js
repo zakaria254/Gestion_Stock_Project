@@ -25,9 +25,15 @@ export const authService = {
       }
     } catch (error) {
       console.error('Login Error Response:', error.response?.data)
+      
+      let message = error.response?.data?.message || 'Email ou code d\'accès invalide';
+      if (error.response?.status === 403) {
+        message = 'Account is inactive. Contact admin.';
+      }
+
       return { 
         success: false, 
-        message: error.response?.data?.message || 'Email ou code d\'accès invalide' 
+        message 
       }
     }
   },

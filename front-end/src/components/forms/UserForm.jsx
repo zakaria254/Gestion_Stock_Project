@@ -1,16 +1,15 @@
 import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
-import { STATUS } from '../../data/mockData'
 
 const ROLES = [
-  { value: 'ADMIN', label: 'Administrateur' },
-  { value: 'SALES', label: 'Ventes' },
-  { value: 'STOCK', label: 'Stock' },
+  { value: 'admin', label: 'Administrateur' },
+  { value: 'ventes', label: 'Ventes' },
+  { value: 'stock', label: 'Stock' },
 ]
 
 const STATUTS = [
-  { value: STATUS.ACTIVE, label: 'Actif' },
-  { value: STATUS.INACTIVE, label: 'Inactif' },
+  { value: 'active', label: 'Actif' },
+  { value: 'inactive', label: 'Inactif' },
 ]
 
 export default function UserForm({ isOpen, onClose, onSubmit, user = null, isLoading = false }) {
@@ -18,28 +17,32 @@ export default function UserForm({ isOpen, onClose, onSubmit, user = null, isLoa
     nom: '',
     prenom: '',
     email: '',
-    role: 'SALES',
-    status: STATUS.ACTIVE,
+    access_code: '',
+    role: 'ventes',
+    status: 'active',
   })
 
   const [errors, setErrors] = useState({})
 
   useEffect(() => {
     if (user) {
+      // Strictly map the properties from the underlying user object
       setFormData({
-        nom: user.nom || '',
-        prenom: user.prenom || '',
+        nom: user.nom ? String(user.nom) : '',
+        prenom: user.prenom ? String(user.prenom) : '',
         email: user.email || '',
-        role: user.role || 'SALES',
-        status: user.status || STATUS.ACTIVE,
+        access_code: user.access_code || '',
+        role: user.role || 'ventes',
+        status: user.status || 'active',
       })
     } else {
       setFormData({
         nom: '',
         prenom: '',
         email: '',
-        role: 'SALES',
-        status: STATUS.ACTIVE,
+        access_code: '',
+        role: 'ventes',
+        status: 'active',
       })
     }
     setErrors({})
@@ -49,6 +52,7 @@ export default function UserForm({ isOpen, onClose, onSubmit, user = null, isLoa
     const newErrors = {}
     if (!formData.nom.trim()) newErrors.nom = 'Le nom est requis'
     if (!formData.prenom.trim()) newErrors.prenom = 'Le prénom est requis'
+    if (!formData.access_code.trim()) newErrors.access_code = 'Le code d\'accès est requis'
     if (!formData.email.trim()) {
       newErrors.email = "L'email est requis"
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
@@ -100,44 +104,46 @@ export default function UserForm({ isOpen, onClose, onSubmit, user = null, isLoa
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-4 space-y-4">
-          {/* Nom */}
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1">
-              Nom
-            </label>
-            <input
-              type="text"
-              name="nom"
-              value={formData.nom}
-              onChange={handleChange}
-              className={`w-full px-3 py-2 bg-background border rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent ${
-                errors.nom ? 'border-destructive' : 'border-border'
-              }`}
-              placeholder="Entrez le nom"
-            />
-            {errors.nom && (
-              <p className="mt-1 text-xs text-destructive">{errors.nom}</p>
-            )}
-          </div>
+          <div className="grid grid-cols-2 gap-4">
+            {/* Nom */}
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-1">
+                Nom
+              </label>
+              <input
+                type="text"
+                name="nom"
+                value={formData.nom}
+                onChange={handleChange}
+                className={`w-full px-3 py-2 bg-background border rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent ${
+                  errors.nom ? 'border-destructive' : 'border-border'
+                }`}
+                placeholder="Entrez le nom"
+              />
+              {errors.nom && (
+                <p className="mt-1 text-xs text-destructive">{errors.nom}</p>
+              )}
+            </div>
 
-          {/* Prénom */}
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1">
-              Prénom
-            </label>
-            <input
-              type="text"
-              name="prenom"
-              value={formData.prenom}
-              onChange={handleChange}
-              className={`w-full px-3 py-2 bg-background border rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent ${
-                errors.prenom ? 'border-destructive' : 'border-border'
-              }`}
-              placeholder="Entrez le prénom"
-            />
-            {errors.prenom && (
-              <p className="mt-1 text-xs text-destructive">{errors.prenom}</p>
-            )}
+            {/* Prénom */}
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-1">
+                Prénom
+              </label>
+              <input
+                type="text"
+                name="prenom"
+                value={formData.prenom}
+                onChange={handleChange}
+                className={`w-full px-3 py-2 bg-background border rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent ${
+                  errors.prenom ? 'border-destructive' : 'border-border'
+                }`}
+                placeholder="Entrez le prénom"
+              />
+              {errors.prenom && (
+                <p className="mt-1 text-xs text-destructive">{errors.prenom}</p>
+              )}
+            </div>
           </div>
 
           {/* Email */}
@@ -157,6 +163,26 @@ export default function UserForm({ isOpen, onClose, onSubmit, user = null, isLoa
             />
             {errors.email && (
               <p className="mt-1 text-xs text-destructive">{errors.email}</p>
+            )}
+          </div>
+
+          {/* Access Code */}
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-1">
+              Code d&apos;accès
+            </label>
+            <input
+              type="text"
+              name="access_code"
+              value={formData.access_code}
+              onChange={handleChange}
+              className={`w-full px-3 py-2 bg-background border rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent ${
+                errors.access_code ? 'border-destructive' : 'border-border'
+              }`}
+              placeholder="Entrez le code d'accès"
+            />
+            {errors.access_code && (
+              <p className="mt-1 text-xs text-destructive">{errors.access_code}</p>
             )}
           </div>
 

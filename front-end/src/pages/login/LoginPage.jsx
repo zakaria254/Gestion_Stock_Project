@@ -152,27 +152,6 @@ export default function LoginPage() {
             {"Contactez votre administrateur si vous avez oublié vos identifiants."}
           </p>
         </div>
-
-        {/* Comptes de test */}
-        <div className="mt-6 p-4 bg-card/50 backdrop-blur rounded-xl border border-border">
-          <p className="text-sm font-medium text-card-foreground mb-3 text-center">
-            Comptes de démonstration
-          </p>
-          <div className="space-y-2 text-xs text-muted-foreground">
-            <div className="flex justify-between items-center p-2 bg-background rounded-lg">
-              <span className="font-medium">Admin</span>
-              <span className="font-mono">admin@halaldistrib.fr / ADM001</span>
-            </div>
-            <div className="flex justify-between items-center p-2 bg-background rounded-lg">
-              <span className="font-medium">Ventes</span>
-              <span className="font-mono">ventes@halaldistrib.fr / VNT001</span>
-            </div>
-            <div className="flex justify-between items-center p-2 bg-background rounded-lg">
-              <span className="font-medium">Stock</span>
-              <span className="font-mono">stock@halaldistrib.fr / STK001</span>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   )

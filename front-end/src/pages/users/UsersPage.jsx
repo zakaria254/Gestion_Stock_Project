@@ -1,26 +1,29 @@
 import { useState, useEffect } from 'react'
-import { Plus, Pencil, Trash2, Key } from 'lucide-react'
+import { Plus, Pencil, Trash2 } from 'lucide-react'
 import DataTable from '../../components/tables/DataTable'
 import UserForm from '../../components/forms/UserForm'
-import { usersService, generateAccessCode } from '../../services/api'
-import { STATUS } from '../../data/mockData'
-import { STATUS_LABELS } from '../../utils/utils'
+import { userService } from '../../services/userService'
 
 const ROLE_LABELS = {
-  ADMIN: 'Administrateur',
-  SALES: 'Ventes',
-  STOCK: 'Stock',
+  admin: 'Administrateur',
+  ventes: 'Ventes',
+  stock: 'Stock',
 }
 
 const ROLE_COLORS = {
-  ADMIN: 'bg-purple-100 text-purple-800',
-  SALES: 'bg-blue-100 text-blue-800',
-  STOCK: 'bg-amber-100 text-amber-800',
+  admin: 'bg-purple-100 text-purple-800',
+  ventes: 'bg-blue-100 text-blue-800',
+  stock: 'bg-amber-100 text-amber-800',
+}
+
+const STATUS_LABELS = {
+  active: 'Actif',
+  inactive: 'Inactif',
 }
 
 const STATUS_COLORS = {
-  [STATUS.ACTIVE]: 'bg-green-100 text-green-800',
-  [STATUS.INACTIVE]: 'bg-red-100 text-red-800',
+  active: 'bg-green-100 text-green-800',
+  inactive: 'bg-red-100 text-red-800',
 }
 
 export default function UsersPage() {
@@ -35,13 +38,25 @@ export default function UsersPage() {
     fetchUsers()
   }, [])
 
+  const handleError = (error, defaultMsg) => {
+    if (error?.response?.status === 403) {
+      showNotification('Access denied', 'error')
+    } else {
+      showNotification(error?.response?.data?.message || defaultMsg, 'error')
+    }
+  }
+
   const fetchUsers = async () => {
     setIsLoading(true)
     try {
-      const data = await usersService.getAll()
-      setUsers(data)
+      const response = await userService.getAll()
+      console.log('API Response:', response) // Added for debugging
+      
+      const extractedData = Array.isArray(response) ? response : response?.data || []
+      const safeData = Array.isArray(extractedData) ? extractedData : []
+      setUsers(safeData)
     } catch (error) {
-      showNotification('Erreur lors du chargement des utilisateurs', 'error')
+      handleError(error, 'Erreur lors du chargement des utilisateurs')
     } finally {
       setIsLoading(false)
     }
@@ -65,25 +80,12 @@ export default function UsersPage() {
   const handleDelete = async (user) => {
     if (window.confirm(`Voulez-vous vraiment supprimer l'utilisateur ${user.prenom} ${user.nom} ?`)) {
       try {
-        await usersService.delete(user.id)
+        await userService.delete(user.id)
         setUsers(prev => prev.filter(u => u.id !== user.id))
         showNotification('Utilisateur supprimé avec succès')
       } catch (error) {
-        showNotification('Erreur lors de la suppression', 'error')
+        handleError(error, 'Erreur lors de la suppression')
       }
-    }
-  }
-
-  const handleGenerateCode = async (user) => {
-    try {
-      const newCode = generateAccessCode(user.role)
-      const updated = await usersService.update(user.id, { accessCode: newCode })
-      if (updated) {
-        setUsers(prev => prev.map(u => u.id === user.id ? { ...u, accessCode: newCode } : u))
-        showNotification(`Nouveau code généré : ${newCode}`)
-      }
-    } catch (error) {
-      showNotification('Erreur lors de la génération du code', 'error')
     }
   }
 
@@ -91,19 +93,17 @@ export default function UsersPage() {
     setIsSubmitting(true)
     try {
       if (selectedUser) {
-        const updated = await usersService.update(selectedUser.id, formData)
-        if (updated) {
-          setUsers(prev => prev.map(u => u.id === selectedUser.id ? updated : u))
-          showNotification('Utilisateur modifié avec succès')
-        }
+        await userService.update(selectedUser.id, formData)
+        await fetchUsers()
+        showNotification('Utilisateur modifié avec succès')
       } else {
-        const newUser = await usersService.create(formData)
-        setUsers(prev => [...prev, newUser])
-        showNotification(`Utilisateur créé avec succès. Code d'accès : ${newUser.accessCode}`)
+        await userService.create(formData)
+        await fetchUsers()
+        showNotification('Utilisateur créé avec succès')
       }
       setIsFormOpen(false)
     } catch (error) {
-      showNotification('Erreur lors de l\'enregistrement', 'error')
+      handleError(error, 'Erreur lors de l\'enregistrement')
     } finally {
       setIsSubmitting(false)
     }
@@ -144,13 +144,6 @@ export default function UsersPage() {
   const renderActions = (user) => (
     <>
       <button
-        onClick={() => handleGenerateCode(user)}
-        className="p-1.5 rounded-lg text-amber-600 hover:bg-amber-50 transition-colors"
-        title="Générer un nouveau code d'accès"
-      >
-        <Key className="h-4 w-4" />
-      </button>
-      <button
         onClick={() => handleEdit(user)}
         className="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors"
         title="Modifier"
@@ -174,6 +167,8 @@ export default function UsersPage() {
       </div>
     )
   }
+
+  if (!Array.isArray(users)) return null;
 
   return (
     <div className="space-y-6">

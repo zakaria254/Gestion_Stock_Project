@@ -25,9 +25,10 @@ export default function DataTable({
   }, [data, searchTerm, searchKeys])
 
   // Pagination
-  const totalPages = Math.ceil(filteredData.length / pageSize)
+  const safeData = Array.isArray(filteredData) ? filteredData : []
+  const totalPages = Math.ceil(safeData.length / pageSize)
   const startIndex = (currentPage - 1) * pageSize
-  const paginatedData = filteredData.slice(startIndex, startIndex + pageSize)
+  const paginatedData = safeData.slice(startIndex, Math.min(startIndex + pageSize, safeData.length))
 
   // Reset page when search changes
   const handleSearchChange = (e) => {
