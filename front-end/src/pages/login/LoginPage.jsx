@@ -88,7 +88,7 @@ export default function LoginPage() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="exemple@halaldistrib.fr"
+                  placeholder="dev@test.com"
                   required
                   className="w-full pl-10 pr-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
                 />
@@ -111,10 +111,10 @@ export default function LoginPage() {
                   id="accessCode"
                   type={showCode ? 'text' : 'password'}
                   value={accessCode}
-                  onChange={(e) => setAccessCode(e.target.value.toUpperCase())}
-                  placeholder="ABC123"
+                  onChange={(e) => setAccessCode(e.target.value)}
+                  placeholder="abc123"
                   required
-                  className="w-full pl-10 pr-12 py-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all uppercase tracking-widest"
+                  className="w-full pl-10 pr-12 py-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all tracking-widest"
                 />
                 <button
                   type="button"

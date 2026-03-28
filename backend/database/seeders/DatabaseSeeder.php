@@ -5,7 +5,7 @@ namespace Database\Seeders;
 // use App\Models\Article;
 // use App\Models\ProductionLot;
 // use App\Models\Stock;
-// use App\Models\User;
+use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -20,14 +20,14 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-        // User::create([
-        //     'nom' => 'admin1',
-        //     'prenom'=>  'admin1',
-        //     'email' => 'admin1@test.com',
-        //     'access_code' => 'admin123',
-        //     'role' => 'admin',
-        //     'status' => 'active',
-        // ]);
+        User::create([
+            'nom' => 'ZAKARIA',
+            'prenom'=>  'DEV',
+            'email' => 'admin1@test.com',
+            'access_code' => 'admin123',
+            'role' => 'admin',
+            'status' => 'active',
+        ]);
 
         // create 2 production lots for each existing article
         // Article::chunk(100, function ($articles) {
