@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 
 const CLIENT_TYPES = [
-  { value: 'Boutique', label: 'Boutique' },
-  { value: 'Entreprise', label: 'Entreprise' },
-  { value: 'Point de vente local', label: 'Point de vente local' },
+  { value: 'boutique', label: 'Boutique' },
+  { value: 'entreprise', label: 'Entreprise' },
+  { value: 'vente_local', label: 'Point de vente local' },
 ]
 
 export default function ClientForm({ isOpen, onClose, onSubmit, client = null, isLoading = false }) {
@@ -13,7 +13,7 @@ export default function ClientForm({ isOpen, onClose, onSubmit, client = null, i
     adresse: '',
     contact: '',
     email: '',
-    type: 'Boutique',
+    type: 'boutique',
   })
 
   const [errors, setErrors] = useState({})
@@ -21,11 +21,11 @@ export default function ClientForm({ isOpen, onClose, onSubmit, client = null, i
   useEffect(() => {
     if (client) {
       setFormData({
-        nom: client.nom || '',
-        adresse: client.adresse || '',
-        contact: client.contact || '',
-        email: client.email || '',
-        type: client.type || 'Boutique',
+        nom: client.nom ? String(client.nom) : '',
+        adresse: client.adresse ? String(client.adresse) : '',
+        contact: client.contact ? String(client.contact) : '',
+        email: client.email ? String(client.email) : '',
+        type: client.type || 'boutique',
       })
     } else {
       setFormData({
@@ -33,7 +33,7 @@ export default function ClientForm({ isOpen, onClose, onSubmit, client = null, i
         adresse: '',
         contact: '',
         email: '',
-        type: 'Boutique',
+        type: 'boutique',
       })
     }
     setErrors({})
@@ -41,12 +41,35 @@ export default function ClientForm({ isOpen, onClose, onSubmit, client = null, i
 
   const validate = () => {
     const newErrors = {}
-    if (!formData.nom.trim()) newErrors.nom = 'Le nom est requis'
-    if (!formData.adresse.trim()) newErrors.adresse = "L'adresse est requise"
-    if (!formData.contact.trim()) newErrors.contact = 'Le contact est requis'
-    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = "L'email n'est pas valide"
+    
+    // Required variables
+    if (!formData.nom.trim()) {
+      newErrors.nom = 'Le nom est requis'
+    } else if (formData.nom.length > 99) {
+      newErrors.nom = 'Le nom ne peut pas dépasser 99 caractères'
     }
+
+    if (!formData.adresse.trim()) {
+      newErrors.adresse = "L'adresse est requise"
+    } else if (formData.adresse.length > 255) {
+      newErrors.adresse = 'L\'adresse ne peut pas dépasser 255 caractères'
+    }
+
+    // Optionals
+    if (formData.contact && formData.contact.trim().length > 0) {
+      if (formData.contact.length > 12 || formData.contact.length < 10) {
+        newErrors.contact = 'Le contact doit contenir entre 10 et 12 caractères'
+      }
+    }
+
+    if (formData.email && formData.email.trim().length > 0) {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+        newErrors.email = "L'email n'est pas un format valide"
+      } else if (formData.email.length > 255) {
+        newErrors.email = 'L\'email ne peut pas dépasser 255 caractères'
+      }
+    }
+
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -54,13 +77,20 @@ export default function ClientForm({ isOpen, onClose, onSubmit, client = null, i
   const handleSubmit = (e) => {
     e.preventDefault()
     if (validate()) {
-      onSubmit(formData)
+      // Clean up empty optional fields to explicitly send null
+      const submissionData = {
+        ...formData,
+        contact: formData.contact.trim() === '' ? null : formData.contact.trim(),
+        email: formData.email.trim() === '' ? null : formData.email.trim()
+      }
+      onSubmit(submissionData)
     }
   }
 
   const handleChange = (e) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
+    // Clear targeted error as user types
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }))
     }
@@ -96,17 +126,18 @@ export default function ClientForm({ isOpen, onClose, onSubmit, client = null, i
           {/* Nom */}
           <div>
             <label className="block text-sm font-medium text-foreground mb-1">
-              Nom
+              Nom du Client *
             </label>
             <input
               type="text"
               name="nom"
+              maxLength={99}
               value={formData.nom}
               onChange={handleChange}
               className={`w-full px-3 py-2 bg-background border rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent ${
                 errors.nom ? 'border-destructive' : 'border-border'
               }`}
-              placeholder="Nom du client"
+              placeholder="Ex: Supérette Centre"
             />
             {errors.nom && (
               <p className="mt-1 text-xs text-destructive">{errors.nom}</p>
@@ -116,67 +147,72 @@ export default function ClientForm({ isOpen, onClose, onSubmit, client = null, i
           {/* Adresse */}
           <div>
             <label className="block text-sm font-medium text-foreground mb-1">
-              Adresse
+              Adresse complète *
             </label>
-            <input
-              type="text"
+            <textarea
               name="adresse"
+              rows={3}
+              maxLength={255}
               value={formData.adresse}
               onChange={handleChange}
-              className={`w-full px-3 py-2 bg-background border rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent ${
+              className={`w-full px-3 py-2 bg-background border rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none ${
                 errors.adresse ? 'border-destructive' : 'border-border'
               }`}
-              placeholder="Adresse complète"
+              placeholder="Adresse du client"
             />
             {errors.adresse && (
               <p className="mt-1 text-xs text-destructive">{errors.adresse}</p>
             )}
           </div>
 
-          {/* Contact */}
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1">
-              Contact
-            </label>
-            <input
-              type="text"
-              name="contact"
-              value={formData.contact}
-              onChange={handleChange}
-              className={`w-full px-3 py-2 bg-background border rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent ${
-                errors.contact ? 'border-destructive' : 'border-border'
-              }`}
-              placeholder="Numéro de téléphone"
-            />
-            {errors.contact && (
-              <p className="mt-1 text-xs text-destructive">{errors.contact}</p>
-            )}
-          </div>
+          <div className="grid grid-cols-2 gap-4">
+            {/* Contact */}
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-1">
+                Téléphone (Optionnel)
+              </label>
+              <input
+                type="text"
+                name="contact"
+                maxLength={12}
+                value={formData.contact}
+                onChange={handleChange}
+                className={`w-full px-3 py-2 bg-background border rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent ${
+                  errors.contact ? 'border-destructive' : 'border-border'
+                }`}
+                placeholder="Ex: 0600000000"
+              />
+              {errors.contact && (
+                <p className="mt-1 text-xs text-destructive">{errors.contact}</p>
+              )}
+            </div>
 
-          {/* Email */}
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1">
-              Email (optionnel)
-            </label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              className={`w-full px-3 py-2 bg-background border rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent ${
-                errors.email ? 'border-destructive' : 'border-border'
-              }`}
-              placeholder="exemple@email.fr"
-            />
-            {errors.email && (
-              <p className="mt-1 text-xs text-destructive">{errors.email}</p>
-            )}
+            {/* Email */}
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-1">
+                Email (Optionnel)
+              </label>
+              <input
+                type="email"
+                name="email"
+                maxLength={255}
+                value={formData.email}
+                onChange={handleChange}
+                className={`w-full px-3 py-2 bg-background border rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent ${
+                  errors.email ? 'border-destructive' : 'border-border'
+                }`}
+                placeholder="client@mail.com"
+              />
+              {errors.email && (
+                <p className="mt-1 text-xs text-destructive">{errors.email}</p>
+              )}
+            </div>
           </div>
 
           {/* Type */}
           <div>
             <label className="block text-sm font-medium text-foreground mb-1">
-              Type
+              Type de Client
             </label>
             <select
               name="type"

@@ -40,6 +40,11 @@ class DatabaseSeeder extends Seeder
             SupplierSeeder::class,
         ]);
 
+        //  Call my existing ClientSeeder (without changing it)
+        $this->call([
+            ClientSeeder::class,
+        ]);
+
 
         
         // create 2 production lots for each existing article

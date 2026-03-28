@@ -1,13 +1,20 @@
 import { useState, useEffect } from 'react'
 import { Plus, Pencil, Trash2 } from 'lucide-react'
+import { Toaster, toast } from 'sonner'
 import DataTable from '../../components/tables/DataTable'
 import ClientForm from '../../components/forms/ClientForm'
-import { clientsService } from '../../services/api'
+import { clientService } from '../../services/clientService'
 
 const TYPE_COLORS = {
-  'Boutique': 'bg-blue-100 text-blue-800',
-  'Entreprise': 'bg-purple-100 text-purple-800',
-  'Point de vente local': 'bg-amber-100 text-amber-800',
+  'boutique': 'bg-blue-100 text-blue-800 border-blue-200',
+  'entreprise': 'bg-purple-100 text-purple-800 border-purple-200',
+  'vente_local': 'bg-amber-100 text-amber-800 border-amber-200',
+}
+
+const TYPE_LABELS = {
+  'boutique': 'Boutique',
+  'entreprise': 'Entreprise',
+  'vente_local': 'Point de vente local',
 }
 
 export default function ClientsPage() {
@@ -16,7 +23,6 @@ export default function ClientsPage() {
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [selectedClient, setSelectedClient] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [notification, setNotification] = useState(null)
 
   useEffect(() => {
     fetchClients()
@@ -25,18 +31,15 @@ export default function ClientsPage() {
   const fetchClients = async () => {
     setIsLoading(true)
     try {
-      const data = await clientsService.getAll()
-      setClients(data)
+      const response = await clientService.getAll()
+      // Extract array robustly
+      const extractedClients = Array.isArray(response) ? response : response?.data || []
+      setClients(Array.isArray(extractedClients) ? extractedClients : [])
     } catch (error) {
-      showNotification('Erreur lors du chargement des clients', 'error')
+      toast.error('Erreur lors du chargement des clients')
     } finally {
       setIsLoading(false)
     }
-  }
-
-  const showNotification = (message, type = 'success') => {
-    setNotification({ message, type })
-    setTimeout(() => setNotification(null), 3000)
   }
 
   const handleCreate = () => {
@@ -52,11 +55,11 @@ export default function ClientsPage() {
   const handleDelete = async (client) => {
     if (window.confirm(`Voulez-vous vraiment supprimer le client "${client.nom}" ?`)) {
       try {
-        await clientsService.delete(client.id)
+        await clientService.delete(Number(client.id))
         setClients(prev => prev.filter(c => c.id !== client.id))
-        showNotification('Client supprimé avec succès')
+        toast.success('Client supprimé avec succès')
       } catch (error) {
-        showNotification('Erreur lors de la suppression', 'error')
+        toast.error('Erreur lors de la suppression')
       }
     }
   }
@@ -65,19 +68,29 @@ export default function ClientsPage() {
     setIsSubmitting(true)
     try {
       if (selectedClient) {
-        const updated = await clientsService.update(selectedClient.id, formData)
-        if (updated) {
-          setClients(prev => prev.map(c => c.id === selectedClient.id ? updated : c))
-          showNotification('Client modifié avec succès')
+        const updated = await clientService.update(Number(selectedClient.id), formData)
+        
+        // Dynamically insert into table or fallback to refresh
+        if (updated && updated.data) {
+           setClients(prev => prev.map(c => c.id === selectedClient.id ? updated.data : c))
+        } else {
+           await fetchClients()
         }
+        toast.success('Client modifié avec succès')
       } else {
-        const newClient = await clientsService.create(formData)
-        setClients(prev => [...prev, newClient])
-        showNotification('Client créé avec succès')
+        const response = await clientService.create(formData)
+        const newClient = response?.data || response
+        
+        if (newClient && newClient.id) {
+            setClients(prev => [newClient, ...prev])
+        } else {
+            await fetchClients()
+        }
+        toast.success('Client créé avec succès')
       }
       setIsFormOpen(false)
     } catch (error) {
-      showNotification("Erreur lors de l'enregistrement", 'error')
+      toast.error(error.response?.data?.message || 'Erreur lors de l\'enregistrement')
     } finally {
       setIsSubmitting(false)
     }
@@ -87,26 +100,55 @@ export default function ClientsPage() {
     {
       key: 'nom',
       label: 'Nom',
-      render: (client) => (
-        <span className="font-medium">{client.nom}</span>
-      ),
+      render: (client) => <span className="font-bold">{client.nom}</span>
     },
     {
       key: 'adresse',
       label: 'Adresse',
+      render: (client) => {
+        const addressText = client.adresse || '';
+        const isTruncated = addressText.length > 30;
+        const displayText = isTruncated ? addressText.substring(0, 30) + '...' : addressText;
+        
+        return (
+          <span 
+            className="text-sm text-slate-600 cursor-help" 
+            title={addressText}
+          >
+            {displayText}
+          </span>
+        )
+      }
     },
     {
       key: 'contact',
       label: 'Contact',
+      render: (client) => (
+        <span className={client.contact ? 'font-mono text-sm' : 'text-slate-400 italic'}>
+          {client.contact || 'N/A'}
+        </span>
+      )
+    },
+    {
+      key: 'email',
+      label: 'Email',
+      render: (client) => (
+        <span className={client.email ? 'text-blue-600' : 'text-slate-400 italic'}>
+          {client.email || '-'}
+        </span>
+      )
     },
     {
       key: 'type',
       label: 'Type',
-      render: (client) => (
-        <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${TYPE_COLORS[client.type] || 'bg-gray-100 text-gray-800'}`}>
-          {client.type}
-        </span>
-      ),
+      render: (client) => {
+        const typeValue = client.type || 'boutique'
+        return (
+          <span className={`inline-flex px-2.5 py-1 text-xs font-semibold rounded-full border ${TYPE_COLORS[typeValue] || 'bg-slate-100 text-slate-800 border-slate-200'}`}>
+            {TYPE_LABELS[typeValue] || 'Boutique'}
+          </span>
+        )
+      },
     },
   ]
 
@@ -137,8 +179,12 @@ export default function ClientsPage() {
     )
   }
 
+  if (!Array.isArray(clients)) return null;
+
   return (
     <div className="space-y-6">
+      <Toaster position="top-right" richColors theme="light" />
+      
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Gestion des Clients</h1>
@@ -153,25 +199,14 @@ export default function ClientsPage() {
         </button>
       </div>
 
-      {notification && (
-        <div
-          className={`p-4 rounded-lg ${
-            notification.type === 'error'
-              ? 'bg-red-50 text-red-800 border border-red-200'
-              : 'bg-green-50 text-green-800 border border-green-200'
-          }`}
-        >
-          {notification.message}
-        </div>
-      )}
-
       <DataTable
         data={clients}
         columns={columns}
-        searchPlaceholder="Rechercher un client..."
-        searchKeys={['nom', 'adresse', 'contact', 'type']}
+        searchPlaceholder="Rechercher par nom ou contact..."
+        searchKeys={['nom', 'contact']}
         pageSize={10}
         renderActions={renderActions}
+        emptyMessage={clients.length === 0 ? "Aucun client trouvé" : "Aucun résultat"}
       />
 
       <ClientForm
