@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-// use App\Models\Article;
+use App\Models\Article;
 // use App\Models\ProductionLot;
 // use App\Models\Stock;
 use App\Models\User;
@@ -28,7 +28,15 @@ class DatabaseSeeder extends Seeder
             'role' => 'admin',
             'status' => 'active',
         ]);
+        
 
+        // 2. Call your existing ArticleSeeder (without changing it)
+        $this->call([
+            ArticleSeeder::class,
+        ]);
+
+
+        
         // create 2 production lots for each existing article
         // Article::chunk(100, function ($articles) {
         //     foreach ($articles as $article) {

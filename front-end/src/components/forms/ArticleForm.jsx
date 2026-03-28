@@ -1,4 +1,3 @@
-// src/components/forms/ArticleForm.jsx
 import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 
@@ -10,11 +9,6 @@ const CATEGORIES = [
   'Charcuterie'
 ]
 
-const STATUTS = [
-  { value: 'ACTIVE', label: 'Actif' },
-  { value: 'INACTIVE', label: 'Inactif' },
-]
-
 export default function ArticleForm({ isOpen, onClose, onSubmit, article = null, isLoading = false }) {
   const [formData, setFormData] = useState({
     reference: '',
@@ -22,7 +16,7 @@ export default function ArticleForm({ isOpen, onClose, onSubmit, article = null,
     categorie: 'Boeuf',
     prix: '',
     unite: 'kg',
-    status: 'ACTIVE'
+    seuil_minimum: ''
   })
 
   const [errors, setErrors] = useState({})
@@ -35,7 +29,7 @@ export default function ArticleForm({ isOpen, onClose, onSubmit, article = null,
         categorie: article.categorie || 'Boeuf',
         prix: article.prix || '',
         unite: article.unite || 'kg',
-        status: article.status || 'ACTIVE'
+        seuil_minimum: article.seuil_minimum || ''
       })
     } else {
       setFormData({
@@ -44,7 +38,7 @@ export default function ArticleForm({ isOpen, onClose, onSubmit, article = null,
         categorie: 'Boeuf',
         prix: '',
         unite: 'kg',
-        status: 'ACTIVE'
+        seuil_minimum: ''
       })
     }
     setErrors({})
@@ -54,8 +48,18 @@ export default function ArticleForm({ isOpen, onClose, onSubmit, article = null,
     const newErrors = {}
     if (!formData.reference.trim()) newErrors.reference = 'La référence est requise'
     if (!formData.nom.trim()) newErrors.nom = 'Le nom est requis'
-    if (!formData.prix) newErrors.prix = 'Le prix est requis'
-    else if (isNaN(Number(formData.prix)) || Number(formData.prix) < 0) newErrors.prix = 'Le prix doit être un nombre positif'
+    
+    if (!formData.prix) {
+      newErrors.prix = 'Le prix est requis'
+    } else if (isNaN(Number(formData.prix)) || Number(formData.prix) < 0) {
+      newErrors.prix = 'Le prix doit être un nombre positif'
+    }
+
+    if (!formData.seuil_minimum && formData.seuil_minimum !== 0) {
+      newErrors.seuil_minimum = 'Le seuil minimum est requis'
+    } else if (isNaN(Number(formData.seuil_minimum)) || Number(formData.seuil_minimum) < 0) {
+      newErrors.seuil_minimum = 'Le seuil doit être un entier positif'
+    }
     
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -66,7 +70,8 @@ export default function ArticleForm({ isOpen, onClose, onSubmit, article = null,
     if (validate()) {
       onSubmit({
         ...formData,
-        prix: Number(formData.prix)
+        prix: Number(formData.prix),
+        seuil_minimum: parseInt(formData.seuil_minimum, 10)
       })
     }
   }
@@ -138,7 +143,7 @@ export default function ArticleForm({ isOpen, onClose, onSubmit, article = null,
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1">Prix Unitaire (€)</label>
+              <label className="block text-sm font-medium text-foreground mb-1">Prix Unitaire (MAD)</label>
               <input
                 type="number"
                 step="0.01"
@@ -166,17 +171,18 @@ export default function ArticleForm({ isOpen, onClose, onSubmit, article = null,
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-foreground mb-1">Statut</label>
-            <select
-              name="status"
-              value={formData.status}
+            <label className="block text-sm font-medium text-foreground mb-1">Seuil Minimum (Alerte Stock)</label>
+            <input
+              type="number"
+              min="0"
+              step="1"
+              name="seuil_minimum"
+              value={formData.seuil_minimum}
               onChange={handleChange}
-              className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-            >
-              {STATUTS.map(statut => (
-                <option key={statut.value} value={statut.value}>{statut.label}</option>
-              ))}
-            </select>
+              className={`w-full px-3 py-2 bg-background border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary ${errors.seuil_minimum ? 'border-destructive' : 'border-border'}`}
+              placeholder="Ex: 5"
+            />
+            {errors.seuil_minimum && <p className="mt-1 text-xs text-destructive">{errors.seuil_minimum}</p>}
           </div>
 
           <div className="flex gap-3 pt-4">

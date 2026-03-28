@@ -1,14 +1,10 @@
-// src/pages/articles/ArticlesPage.jsx
 import { useState, useEffect } from 'react'
 import { Plus, Pencil, Trash2 } from 'lucide-react'
+import { Toaster, toast } from 'sonner'
 import DataTable from '../../components/tables/DataTable'
 import ArticleForm from '../../components/forms/ArticleForm'
-import { articlesService, stockService } from '../../services/api'
-
-const STATUT_COLORS = {
-  ACTIVE: 'bg-green-100 text-green-800',
-  INACTIVE: 'bg-red-100 text-red-800',
-}
+import { articleService } from '../../services/articleService'
+import { stockService } from '../../services/api'
 
 export default function ArticlesPage() {
   const [articles, setArticles] = useState([])
@@ -17,7 +13,6 @@ export default function ArticlesPage() {
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [selectedArticle, setSelectedArticle] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [notification, setNotification] = useState(null)
   const [categoryFilter, setCategoryFilter] = useState('all')
 
   useEffect(() => {
@@ -27,11 +22,13 @@ export default function ArticlesPage() {
   const fetchData = async () => {
     setIsLoading(true)
     try {
-      const [articlesData, stockData] = await Promise.all([
-        articlesService.getAll(),
+      const [response, stockData] = await Promise.all([
+        articleService.getAll(),
         stockService.getAll()
       ])
-      setArticles(articlesData)
+      
+      const extractedArticles = Array.isArray(response) ? response : response?.data || []
+      setArticles(Array.isArray(extractedArticles) ? extractedArticles : [])
       
       const stockMapping = {}
       stockData.forEach(s => {
@@ -39,15 +36,10 @@ export default function ArticlesPage() {
       })
       setStockMap(stockMapping)
     } catch (error) {
-      showNotification('Erreur lors du chargement des articles', 'error')
+      toast.error('Erreur lors du chargement des articles')
     } finally {
       setIsLoading(false)
     }
-  }
-
-  const showNotification = (message, type = 'success') => {
-    setNotification({ message, type })
-    setTimeout(() => setNotification(null), 3000)
   }
 
   const handleCreate = () => {
@@ -63,11 +55,11 @@ export default function ArticlesPage() {
   const handleDelete = async (article) => {
     if (window.confirm(`Voulez-vous vraiment supprimer l'article ${article.nom} ?`)) {
       try {
-        await articlesService.delete(Number(article.id))
+        await articleService.delete(Number(article.id))
         setArticles(prev => prev.filter(a => a.id !== article.id))
-        showNotification('Article supprimé avec succès')
+        toast.success('Article supprimé avec succès')
       } catch (error) {
-        showNotification('Erreur lors de la suppression', 'error')
+        toast.error('Erreur lors de la suppression')
       }
     }
   }
@@ -76,21 +68,39 @@ export default function ArticlesPage() {
     setIsSubmitting(true)
     try {
       if (selectedArticle) {
-        const updated = await articlesService.update(Number(selectedArticle.id), formData)
-        if (updated) {
-          setArticles(prev => prev.map(a => a.id === selectedArticle.id ? updated : a))
-          showNotification('Article modifié avec succès')
+        const updated = await articleService.update(Number(selectedArticle.id), formData)
+        // If API doesn't return the full updated object, rely on refetching
+        if (updated && updated.data) {
+           setArticles(prev => prev.map(a => a.id === selectedArticle.id ? updated.data : a))
+        } else {
+           await fetchData()
         }
+        toast.success('Article modifié avec succès')
       } else {
-        const newArticle = await articlesService.create(formData)
-        setArticles(prev => [...prev, newArticle])
-        showNotification('Article créé avec succès')
+        const response = await articleService.create(formData)
+        const newArticle = response?.data || response
+        if (newArticle && newArticle.id) {
+            setArticles(prev => [...prev, newArticle])
+        } else {
+            await fetchData()
+        }
+        toast.success('Article créé avec succès')
       }
       setIsFormOpen(false)
     } catch (error) {
-      showNotification('Erreur lors de l\'enregistrement', 'error')
+      toast.error(error.response?.data?.message || 'Erreur lors de l\'enregistrement')
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  const getCategoryBadge = (category) => {
+    switch(category?.toLowerCase()) {
+      case 'volaille': return 'bg-yellow-100 text-yellow-800 border-yellow-200'
+      case 'boeuf': return 'bg-red-100 text-red-800 border-red-200'
+      case 'agneau': return 'bg-orange-100 text-orange-800 border-orange-200'
+      case 'charcuterie': return 'bg-pink-100 text-pink-800 border-pink-200'
+      default: return 'bg-slate-100 text-slate-800 border-slate-200'
     }
   }
 
@@ -98,7 +108,7 @@ export default function ArticlesPage() {
     {
       key: 'reference',
       label: 'Référence',
-      render: (article) => <span className="font-medium">{article.reference}</span>
+      render: (article) => <span className="font-bold">{article.reference}</span>
     },
     {
       key: 'nom',
@@ -108,15 +118,15 @@ export default function ArticlesPage() {
       key: 'categorie',
       label: 'Catégorie',
       render: (article) => (
-        <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-slate-100 text-slate-800">
-          {article.categorie}
+        <span className={`inline-flex px-2.5 py-1 text-xs font-semibold rounded-full border ${getCategoryBadge(article.categorie)}`}>
+          {article.categorie || 'Non catégorisé'}
         </span>
       ),
     },
     {
       key: 'prix',
       label: 'Prix Unitaire',
-      render: (article) => `${Number(article.prix).toFixed(2)} €`
+      render: (article) => `${Number(article.prix).toFixed(2)} MAD`
     },
     {
       key: 'stock',
@@ -124,7 +134,7 @@ export default function ArticlesPage() {
       render: (article) => {
         const qty = stockMap[article.id] || 0
         return (
-          <span className={`font-medium ${qty > 0 ? 'text-green-600' : 'text-red-600'}`}>
+          <span>
             {qty} {article.unite || 'kg'}
           </span>
         )
@@ -134,10 +144,11 @@ export default function ArticlesPage() {
       key: 'status',
       label: 'Statut',
       render: (article) => {
-        const status = article.status || 'ACTIVE'
+        const qty = stockMap[article.id] || 0
+        const isEnRupture = qty <= 0
         return (
-          <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${STATUT_COLORS[status] || STATUT_COLORS.ACTIVE}`}>
-            {status === 'ACTIVE' ? 'Actif' : 'Inactif'}
+          <span className={`inline-flex px-2.5 py-1 text-xs font-semibold rounded-full ${isEnRupture ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
+            {isEnRupture ? 'En rupture' : 'Actif'}
           </span>
         )
       }
@@ -171,8 +182,11 @@ export default function ArticlesPage() {
     )
   }
 
+  if (!Array.isArray(articles)) return null;
+
   return (
     <div className="space-y-6">
+      <Toaster position="top-right" richColors theme="light" />
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Gestion des Articles</h1>
@@ -186,12 +200,6 @@ export default function ArticlesPage() {
           Nouvel Article
         </button>
       </div>
-
-      {notification && (
-        <div className={`p-4 rounded-lg ${notification.type === 'error' ? 'bg-red-50 text-red-800 border border-red-200' : 'bg-green-50 text-green-800 border border-green-200'}`}>
-          {notification.message}
-        </div>
-      )}
 
       {/* Filters Bar */}
       <div className="flex flex-col sm:flex-row gap-4 bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
