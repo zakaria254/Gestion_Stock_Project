@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { Plus, Pencil, Trash2 } from 'lucide-react'
+import { Toaster, toast } from 'sonner'
 import DataTable from '../../components/tables/DataTable'
 import SupplierForm from '../../components/forms/SupplierForm'
-import { suppliersService } from '../../services/api'
+import { supplierService } from '../../services/supplierService'
 
 export default function SuppliersPage() {
   const [suppliers, setSuppliers] = useState([])
@@ -10,27 +11,23 @@ export default function SuppliersPage() {
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [selectedSupplier, setSelectedSupplier] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [notification, setNotification] = useState(null)
 
   useEffect(() => {
-    fetchSuppliers()
+    fetchData()
   }, [])
 
-  const fetchSuppliers = async () => {
+  const fetchData = async () => {
     setIsLoading(true)
     try {
-      const data = await suppliersService.getAll()
-      setSuppliers(data)
+      const response = await supplierService.getAll()
+      // Extract array robustly
+      const extractedSuppliers = Array.isArray(response) ? response : response?.data || []
+      setSuppliers(Array.isArray(extractedSuppliers) ? extractedSuppliers : [])
     } catch (error) {
-      showNotification('Erreur lors du chargement des fournisseurs', 'error')
+      toast.error('Erreur lors du chargement des fournisseurs')
     } finally {
       setIsLoading(false)
     }
-  }
-
-  const showNotification = (message, type = 'success') => {
-    setNotification({ message, type })
-    setTimeout(() => setNotification(null), 3000)
   }
 
   const handleCreate = () => {
@@ -44,13 +41,13 @@ export default function SuppliersPage() {
   }
 
   const handleDelete = async (supplier) => {
-    if (window.confirm(`Voulez-vous vraiment supprimer le fournisseur "${supplier.nom}" ?`)) {
+    if (window.confirm(`Voulez-vous vraiment supprimer le fournisseur ${supplier.nom} ?`)) {
       try {
-        await suppliersService.delete(supplier.id)
+        await supplierService.delete(Number(supplier.id))
         setSuppliers(prev => prev.filter(s => s.id !== supplier.id))
-        showNotification('Fournisseur supprimé avec succès')
+        toast.success('Fournisseur supprimé avec succès')
       } catch (error) {
-        showNotification('Erreur lors de la suppression', 'error')
+        toast.error('Erreur lors de la suppression')
       }
     }
   }
@@ -59,19 +56,29 @@ export default function SuppliersPage() {
     setIsSubmitting(true)
     try {
       if (selectedSupplier) {
-        const updated = await suppliersService.update(selectedSupplier.id, formData)
-        if (updated) {
-          setSuppliers(prev => prev.map(s => s.id === selectedSupplier.id ? updated : s))
-          showNotification('Fournisseur modifié avec succès')
+        const updated = await supplierService.update(Number(selectedSupplier.id), formData)
+        
+        // Dynamically insert into table or fallback to refresh
+        if (updated && updated.data) {
+           setSuppliers(prev => prev.map(s => s.id === selectedSupplier.id ? updated.data : s))
+        } else {
+           await fetchData()
         }
+        toast.success('Fournisseur modifié avec succès')
       } else {
-        const newSupplier = await suppliersService.create(formData)
-        setSuppliers(prev => [...prev, newSupplier])
-        showNotification('Fournisseur créé avec succès')
+        const response = await supplierService.create(formData)
+        const newSupplier = response?.data || response
+        
+        if (newSupplier && newSupplier.id) {
+            setSuppliers(prev => [newSupplier, ...prev])
+        } else {
+            await fetchData()
+        }
+        toast.success('Fournisseur créé avec succès')
       }
       setIsFormOpen(false)
     } catch (error) {
-      showNotification("Erreur lors de l'enregistrement", 'error')
+      toast.error(error.response?.data?.message || 'Erreur lors de l\'enregistrement')
     } finally {
       setIsSubmitting(false)
     }
@@ -81,18 +88,35 @@ export default function SuppliersPage() {
     {
       key: 'nom',
       label: 'Nom',
-      render: (supplier) => (
-        <span className="font-medium">{supplier.nom}</span>
-      ),
+      render: (supplier) => <span className="font-bold">{supplier.nom}</span>
     },
     {
       key: 'adresse',
       label: 'Adresse',
+      render: (supplier) => (
+        <span className="text-sm truncate max-w-xs inline-block">
+          {supplier.adresse}
+        </span>
+      )
     },
     {
       key: 'contact',
       label: 'Contact',
+      render: (supplier) => (
+        <span className={supplier.contact ? 'font-mono text-sm' : 'text-slate-400 italic'}>
+          {supplier.contact || 'N/A'}
+        </span>
+      )
     },
+    {
+      key: 'email',
+      label: 'Email',
+      render: (supplier) => (
+        <span className={supplier.email ? 'text-blue-600' : 'text-slate-400 italic'}>
+          {supplier.email || '-'}
+        </span>
+      )
+    }
   ]
 
   const renderActions = (supplier) => (
@@ -122,12 +146,17 @@ export default function SuppliersPage() {
     )
   }
 
+  if (!Array.isArray(suppliers)) return null;
+
   return (
     <div className="space-y-6">
+      {/* Toast provider styled lightly integrating exactly into dashboard */}
+      <Toaster position="top-right" richColors theme="light" />
+      
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Gestion des Fournisseurs</h1>
-          <p className="text-muted-foreground">Gérer les fournisseurs et leurs informations</p>
+          <h1 className="text-2xl font-bold text-foreground">Fournisseurs</h1>
+          <p className="text-muted-foreground">Gérez vos contacts et adresses d'approvisionnement</p>
         </div>
         <button
           onClick={handleCreate}
@@ -138,25 +167,14 @@ export default function SuppliersPage() {
         </button>
       </div>
 
-      {notification && (
-        <div
-          className={`p-4 rounded-lg ${
-            notification.type === 'error'
-              ? 'bg-red-50 text-red-800 border border-red-200'
-              : 'bg-green-50 text-green-800 border border-green-200'
-          }`}
-        >
-          {notification.message}
-        </div>
-      )}
-
       <DataTable
         data={suppliers}
         columns={columns}
-        searchPlaceholder="Rechercher un fournisseur..."
-        searchKeys={['nom', 'adresse', 'contact']}
+        searchPlaceholder="Rechercher par nom ou contact..."
+        searchKeys={['nom', 'contact']}
         pageSize={10}
         renderActions={renderActions}
+        emptyMessage={suppliers.length === 0 ? "Aucun fournisseur trouvé" : "Aucun résultat"}
       />
 
       <SupplierForm

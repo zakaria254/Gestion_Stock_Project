@@ -30,9 +30,14 @@ class DatabaseSeeder extends Seeder
         ]);
         
 
-        // 2. Call your existing ArticleSeeder (without changing it)
+        //  Call my existing ArticleSeeder (without changing it)
         $this->call([
             ArticleSeeder::class,
+        ]);
+
+        //  Call my existing SupplierSeeder (without changing it)
+        $this->call([
+            SupplierSeeder::class,
         ]);
 
 
