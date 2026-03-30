@@ -1,7 +1,7 @@
 // src/pages/stock/StockPage.jsx
 import { useState, useEffect } from 'react'
 import DataTable from '../../components/tables/DataTable'
-import { stockService } from '../../services/api'
+import { stockService } from '../../services/stockService'
 
 export default function StockPage() {
   const [stockItems, setStockItems] = useState([])
@@ -18,7 +18,7 @@ export default function StockPage() {
   const fetchStock = async () => {
     setIsLoading(true)
     try {
-      const data = await stockService.getStock()
+      const data = await stockService.getAll()
       setStockItems(data)
     } catch (error) {
       showNotification('Erreur lors du chargement du stock', 'error')
@@ -46,19 +46,19 @@ export default function StockPage() {
     {
       key: 'articleNom',
       label: 'Article',
-      render: (item) => <span className="font-medium text-foreground">{item.articleNom}</span>
+      render: (item) => <span className="font-medium text-foreground">{item.article?.nom || 'Article Inconnu'}</span>
     },
     {
       key: 'categorie',
       label: 'Catégorie',
-      render: (item) => <span className="text-muted-foreground">{item.categorie}</span>
+      render: (item) => <span className="text-muted-foreground">{item.article?.categorie || '—'}</span>
     },
     {
       key: 'stockActuel',
       label: 'Stock Actuel',
       render: (item) => (
         <span className="font-semibold text-primary">
-          {item.stockActuel} {item.unite || ''}
+          {item.stock_actuel} {item.article?.unite || ''}
         </span>
       )
     },
@@ -67,7 +67,7 @@ export default function StockPage() {
       label: 'Seuil Minimum',
       render: (item) => (
         <span className="text-muted-foreground">
-          {item.seuilMinimum} {item.unite || ''}
+          {item.seuil_minimun} {item.article?.unite || ''}
         </span>
       )
     },
@@ -75,7 +75,7 @@ export default function StockPage() {
       key: 'status',
       label: 'Statut',
       render: (item) => {
-        const { label, className } = getStatus(item.stockActuel, item.seuilMinimum)
+        const { label, className } = getStatus(item.stock_actuel, item.seuil_minimun)
         return (
           <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${className}`}>
             {label}
@@ -118,7 +118,7 @@ export default function StockPage() {
             className="w-full h-10 px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
           >
             <option value="all">Toutes les catégories</option>
-            {[...new Set(stockItems.map(item => item.categorie).filter(Boolean))].map(cat => (
+            {[...new Set(stockItems.map(item => item.article?.categorie).filter(Boolean))].map(cat => (
               <option key={cat} value={cat}>{cat}</option>
             ))}
           </select>
@@ -139,14 +139,19 @@ export default function StockPage() {
       </div>
 
       <DataTable
-        data={stockItems.filter(item => {
-          if (categoryFilter !== 'all' && item.categorie !== categoryFilter) return false
-          if (statusFilter !== 'all' && getStatus(item.stockActuel, item.seuilMinimum).label !== statusFilter) return false
+        data={stockItems
+          .map(item => ({
+             ...item,
+             searchKeywords: `${item.article?.nom || ''} ${item.article?.categorie || ''}`.toLowerCase()
+          }))
+          .filter(item => {
+          if (categoryFilter !== 'all' && item.article?.categorie !== categoryFilter) return false
+          if (statusFilter !== 'all' && getStatus(item.stock_actuel, item.seuil_minimun).label !== statusFilter) return false
           return true
         })}
         columns={columns}
         searchPlaceholder="Rechercher par article ou catégorie..."
-        searchKeys={['articleNom', 'categorie']}
+        searchKeys={['searchKeywords']}
         pageSize={10}
       />
     </div>
