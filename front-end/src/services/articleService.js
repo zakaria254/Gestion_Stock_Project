@@ -3,7 +3,7 @@ import { api } from './api';
 export const articleService = {
   getAll: async () => {
     const response = await api.get('/articles');
-    return response.data;
+    return response.data?.data || response.data || [];
   },
 
   create: async (data) => {
