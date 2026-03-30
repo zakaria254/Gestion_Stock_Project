@@ -22,8 +22,14 @@ api.interceptors.response.use(
   response => response,
   error => {
     if (error.response && error.response.status === 401) {
-      localStorage.removeItem('token')
-      window.location.href = '/login'
+      // Don't intercept 401 responses ON the login call itself
+      const requestUrl = error.config?.url || ''
+      if (!requestUrl.includes('/login')) {
+        localStorage.removeItem('token')
+        // Use replace to root so React Router's auth guard redirects to /login
+        // NEVER use window.location.href = '/login' — that sends GET to Laravel (405!)
+        window.location.replace('/')
+      }
     }
     return Promise.reject(error)
   }

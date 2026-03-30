@@ -3,11 +3,12 @@ import { useState, useEffect } from 'react'
 import { Plus, Pencil, Trash2 } from 'lucide-react'
 import DataTable from '../../components/tables/DataTable'
 import StockMovementForm from '../../components/forms/StockMovementForm'
-import { stockMovementsService, articlesService } from '../../services/api'
+import { mouvementStockService } from '../../services/mouvementStockService'
+import { stockService } from '../../services/stockService'
 
 export default function StockMovementsPage() {
   const [movements, setMovements] = useState([])
-  const [articles, setArticles] = useState([])
+  const [stocks, setStocks] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [selectedMovement, setSelectedMovement] = useState(null)
@@ -26,18 +27,17 @@ export default function StockMovementsPage() {
   const fetchData = async () => {
     setIsLoading(true)
     try {
-      const [movementsData, articlesData] = await Promise.all([
-        stockMovementsService.getAll(),
-        articlesService.getAll()
+      const [movementsData, stocksData] = await Promise.all([
+        mouvementStockService.getAll(),
+        stockService.getAll()
       ])
       
-      // Map article name to movements for easier searching and sorting
+      // Movements already have stock.article from backend nested eager loading
       const enrichedMovements = movementsData.map(m => {
-        const article = articlesData.find(a => a.id === m.articleId)
         return {
           ...m,
-          articleNom: article ? article.nom : 'Article Inconnu',
-          unite: article ? article.unite : ''
+          articleNom: m.stock?.article?.nom || 'Article Inconnu',
+          unite: m.stock?.article?.unite || ''
         }
       })
       
@@ -45,7 +45,7 @@ export default function StockMovementsPage() {
       enrichedMovements.sort((a, b) => new Date(b.date) - new Date(a.date))
       
       setMovements(enrichedMovements)
-      setArticles(articlesData)
+      setStocks(stocksData)
     } catch (error) {
       showNotification('Erreur lors du chargement des mouvements de stock', 'error')
     } finally {
@@ -71,7 +71,7 @@ export default function StockMovementsPage() {
   const handleDelete = async (movement) => {
     if (window.confirm(`Voulez-vous vraiment supprimer ce mouvement de stock ?`)) {
       try {
-        await stockMovementsService.delete(Number(movement.id))
+        await mouvementStockService.delete(Number(movement.id))
         setMovements(prev => prev.filter(m => m.id !== movement.id))
         showNotification('Mouvement supprimé avec succès')
       } catch (error) {
@@ -80,35 +80,37 @@ export default function StockMovementsPage() {
     }
   }
 
-  const handleFormSubmit = async (formData) => {
+  const handleFormSubmit = async (formData, setBackendErrors) => {
     setIsSubmitting(true)
     try {
       if (selectedMovement) {
-        const updated = await stockMovementsService.update(Number(selectedMovement.id), formData)
-        if (updated) {
-          const article = articles.find(a => a.id === updated.articleId)
-          const enrichedUpdated = {
-            ...updated,
-            articleNom: article ? article.nom : 'Article Inconnu',
-            unite: article ? article.unite : ''
-          }
-          setMovements(prev => prev.map(m => m.id === selectedMovement.id ? enrichedUpdated : m).sort((a, b) => new Date(b.date) - new Date(a.date)))
-          showNotification('Mouvement modifié avec succès')
+        const updated = await mouvementStockService.update(Number(selectedMovement.id), formData)
+        // Ensure the updated object has the enriched fields
+        const enrichedUpdated = {
+          ...updated,
+          articleNom: updated.stock?.article?.nom || 'Article Inconnu',
+          unite: updated.stock?.article?.unite || ''
         }
+        setMovements(prev => prev.map(m => m.id === selectedMovement.id ? enrichedUpdated : m).sort((a, b) => new Date(b.date) - new Date(a.date)))
+        showNotification('Mouvement modifié avec succès')
       } else {
-        const newMovement = await stockMovementsService.create(formData)
-        const article = articles.find(a => a.id === newMovement.articleId)
+        const newMovement = await mouvementStockService.create(formData)
         const enrichedNew = {
           ...newMovement,
-          articleNom: article ? article.nom : 'Article Inconnu',
-          unite: article ? article.unite : ''
+          articleNom: newMovement.stock?.article?.nom || 'Article Inconnu',
+          unite: newMovement.stock?.article?.unite || ''
         }
         setMovements(prev => [enrichedNew, ...prev].sort((a, b) => new Date(b.date) - new Date(a.date)))
         showNotification('Mouvement créé avec succès')
       }
       setIsFormOpen(false)
+      // Background logic: since stock changed, fetch stocks silently to update the "Current Stock" logic
+      stockService.getAll().then(setStocks).catch(console.error)
     } catch (error) {
-      showNotification('Erreur lors de l\'enregistrement', 'error')
+      if (setBackendErrors) {
+        setBackendErrors(error)
+      }
+      showNotification(error.response?.data?.message || 'Erreur lors de l\'enregistrement', 'error')
     } finally {
       setIsSubmitting(false)
     }
@@ -121,7 +123,7 @@ export default function StockMovementsPage() {
       render: (m) => {
         try {
           const d = new Date(m.date)
-          return isNaN(d.getTime()) ? "-" : new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(d)
+          return isNaN(d.getTime()) ? "-" : new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(d)
         } catch {
           return "-"
         }
@@ -136,7 +138,7 @@ export default function StockMovementsPage() {
       key: 'type',
       label: 'Type',
       render: (m) => {
-        const isEntree = m.type === 'ENTREE'
+        const isEntree = m.type === 'in' || m.type === 'ENTREE'
         return (
           <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${isEntree ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
             {isEntree ? 'Entrée' : 'Sortie'}
@@ -147,11 +149,14 @@ export default function StockMovementsPage() {
     {
       key: 'quantite',
       label: 'Quantité',
-      render: (m) => (
-        <span className={`font-semibold ${m.type === 'ENTREE' ? 'text-green-600' : 'text-red-600'}`}>
-          {m.type === 'ENTREE' ? '+' : '-'}{m.quantite} {m.unite}
-        </span>
-      )
+      render: (m) => {
+        const isEntree = m.type === 'in' || m.type === 'ENTREE'
+        return (
+          <span className={`font-semibold ${isEntree ? 'text-green-600' : 'text-red-600'}`}>
+            {isEntree ? '+' : '-'}{m.quantite} {m.unite}
+          </span>
+        )
+      }
     },
     {
       key: 'motif',
@@ -237,8 +242,8 @@ export default function StockMovementsPage() {
             className="w-full h-10 px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
           >
             <option value="all">Tous les types</option>
-            <option value="ENTREE">Entrée</option>
-            <option value="SORTIE">Sortie</option>
+            <option value="in">Entrée</option>
+            <option value="out">Sortie</option>
           </select>
         </div>
         <div className="space-y-1">
@@ -258,7 +263,7 @@ export default function StockMovementsPage() {
 
       <DataTable
         data={movements.filter(m => {
-          if (typeFilter !== 'all' && m.type !== typeFilter) return false
+          if (typeFilter !== 'all' && m.type !== typeFilter && m.type?.toLowerCase() !== typeFilter.toLowerCase()) return false
           if (motifFilter !== 'all' && m.motif !== motifFilter) return false
           if (dateFrom || dateTo) {
             const mDate = new Date(m.date)
@@ -277,8 +282,8 @@ export default function StockMovementsPage() {
           return true
         })}
         columns={columns}
-        searchPlaceholder="Rechercher par article, type ou motif..."
-        searchKeys={['articleNom', 'type', 'motif']}
+        searchPlaceholder="Rechercher par article ou motif..."
+        searchKeys={['articleNom', 'motif']}
         pageSize={10}
         renderActions={renderActions}
         emptyMessage="Aucun mouvement trouvé"
@@ -289,9 +294,10 @@ export default function StockMovementsPage() {
         onClose={() => setIsFormOpen(false)}
         onSubmit={handleFormSubmit}
         movement={selectedMovement}
-        articles={articles}
+        stocks={stocks}
         isLoading={isSubmitting}
       />
     </div>
   )
 }
+

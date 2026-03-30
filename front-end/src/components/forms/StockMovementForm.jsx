@@ -1,11 +1,10 @@
 // src/components/forms/StockMovementForm.jsx
 import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
-import { stockService } from '../../services/api'
 
 const TYPES = [
-  { value: 'ENTREE', label: 'Entrée ( + )' },
-  { value: 'SORTIE', label: 'Sortie ( - )' },
+  { value: 'in', label: 'Entrée ( + )' },
+  { value: 'out', label: 'Sortie ( - )' },
 ]
 
 const MOTIFS = [
@@ -17,75 +16,61 @@ const MOTIFS = [
   'Retour client',
 ]
 
-export default function StockMovementForm({ isOpen, onClose, onSubmit, movement = null, articles = [], isLoading = false }) {
+export default function StockMovementForm({ isOpen, onClose, onSubmit, movement = null, stocks = [], isLoading = false }) {
   const [formData, setFormData] = useState({
-    articleId: '',
-    type: 'ENTREE',
+    stock_id: '',
+    type: 'in',
     quantite: '',
     motif: 'Achat',
-    date: new Date().toISOString().split('T')[0],
   })
 
   const [errors, setErrors] = useState({})
   const [currentStock, setCurrentStock] = useState(null)
   
-  // Update the current stock when the article changes
+  // Track current stock instantly from props
   useEffect(() => {
-    const fetchStock = async () => {
-      if (formData.articleId) {
-        try {
-          const stockData = await stockService.getStock()
-          const articleStock = stockData.find(s => s.articleId === Number(formData.articleId))
-          setCurrentStock(articleStock ? articleStock.stockActuel : 0)
-        } catch (error) {
-          console.error("Error fetching stock", error)
-          setCurrentStock(null)
-        }
-      } else {
-        setCurrentStock(null)
-      }
+    if (formData.stock_id && stocks.length > 0) {
+      const selectedStock = stocks.find(s => s.id === Number(formData.stock_id))
+      setCurrentStock(selectedStock ? selectedStock.stock_actuel : 0)
+    } else {
+      setCurrentStock(null)
     }
-    
-    fetchStock()
-  }, [formData.articleId])
+  }, [formData.stock_id, stocks])
 
   useEffect(() => {
     if (movement) {
       setFormData({
-        articleId: movement.articleId || '',
-        type: movement.type || 'ENTREE',
+        stock_id: movement.stock?.id || '',
+        type: movement.type || 'in',
         quantite: movement.quantite || '',
         motif: movement.motif || 'Achat',
-        date: movement.date || new Date().toISOString().split('T')[0],
       })
     } else {
       setFormData({
-        articleId: articles.length > 0 ? articles[0].id : '',
-        type: 'ENTREE',
+        stock_id: stocks.length > 0 ? stocks[0].id : '',
+        type: 'in',
         quantite: '',
         motif: 'Achat',
-        date: new Date().toISOString().split('T')[0],
       })
     }
     setErrors({})
-  }, [movement, isOpen, articles])
+  }, [movement, isOpen, stocks])
 
   const validate = () => {
     const newErrors = {}
-    if (!formData.articleId) newErrors.articleId = 'Veuillez sélectionner un article'
+    if (!formData.stock_id) newErrors.stock_id = 'Veuillez sélectionner un article'
     if (!formData.quantite) newErrors.quantite = 'La quantité est requise'
     else if (isNaN(Number(formData.quantite)) || Number(formData.quantite) <= 0) {
       newErrors.quantite = 'La quantité doit être supérieure à 0'
     }
-    if (!formData.date) newErrors.date = 'La date est requise'
     if (!formData.motif) newErrors.motif = 'Le motif est requis'
 
-    // Validation du stock pour les sorties
-    if (formData.type === 'SORTIE' && !newErrors.quantite && currentStock !== null) {
+    // Stock validation for OUT movements
+    if (formData.type === 'out' && !newErrors.quantite && currentStock !== null) {
       if (Number(formData.quantite) > currentStock) {
         let actualStockLimit = currentStock
-        // Si on est en modification et qu'on modifie une sortie existante pour le même article, on rajoute l'ancienne quantité au stock actuel pour la validation
-        if (movement && movement.type === 'SORTIE' && Number(movement.articleId) === Number(formData.articleId)) {
+        // If editing a SORTIE for the same stock, add back the old quantity
+        if (movement && movement.type === 'out' && Number(movement.stock?.id) === Number(formData.stock_id)) {
           actualStockLimit += Number(movement.quantite)
         }
         
@@ -99,14 +84,26 @@ export default function StockMovementForm({ isOpen, onClose, onSubmit, movement 
     return Object.keys(newErrors).length === 0
   }
 
+  // Accept backend 422 validation errors
+  const setBackendErrors = (error) => {
+    if (error.response && error.response.status === 422 && error.response.data?.errors) {
+      const backendErrors = {}
+      Object.entries(error.response.data.errors).forEach(([field, messages]) => {
+        backendErrors[field] = Array.isArray(messages) ? messages[0] : messages
+      })
+      setErrors(prev => ({ ...prev, ...backendErrors }))
+    }
+  }
+
   const handleSubmit = (e) => {
     e.preventDefault()
     if (validate()) {
+      const quantiteNum = parseFloat(formData.quantite)
       onSubmit({
         ...formData,
-        articleId: Number(formData.articleId),
-        quantite: Number(formData.quantite),
-      })
+        stock_id: Number(formData.stock_id),
+        quantite: quantiteNum.toFixed(2), // decimal:0,2 format for backend
+      }, setBackendErrors)
     }
   }
 
@@ -138,15 +135,15 @@ export default function StockMovementForm({ isOpen, onClose, onSubmit, movement 
           <div>
             <label className="block text-sm font-medium text-foreground mb-1">Article</label>
             <select
-              name="articleId"
-              value={formData.articleId}
+              name="stock_id"
+              value={formData.stock_id}
               onChange={handleChange}
-              className={`w-full px-3 py-2 bg-background border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary ${errors.articleId ? 'border-destructive' : 'border-border'}`}
+              className={`w-full px-3 py-2 bg-background border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary ${errors.stock_id ? 'border-destructive' : 'border-border'}`}
             >
               <option value="">Sélectionner un article...</option>
-              {articles.map(article => (
-                <option key={article.id} value={article.id}>
-                  {article.nom} ({article.reference})
+              {stocks.map(stock => (
+                <option key={stock.id} value={stock.id}>
+                  {stock.article?.nom} ({stock.article?.reference || 'Sans ref'})
                 </option>
               ))}
             </select>
@@ -155,7 +152,7 @@ export default function StockMovementForm({ isOpen, onClose, onSubmit, movement 
                 Stock actuel : <span className={currentStock > 0 ? 'text-green-600' : 'text-red-500'}>{currentStock}</span>
               </p>
             )}
-            {errors.articleId && <p className="mt-1 text-xs text-destructive">{errors.articleId}</p>}
+            {errors.stock_id && <p className="mt-1 text-xs text-destructive">{errors.stock_id}</p>}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -177,13 +174,13 @@ export default function StockMovementForm({ isOpen, onClose, onSubmit, movement 
               <label className="block text-sm font-medium text-foreground mb-1">Quantité</label>
               <input
                 type="number"
-                min="0"
-                step="any"
+                min="0.01"
+                step="0.01"
                 name="quantite"
                 value={formData.quantite}
                 onChange={handleChange}
                 className={`w-full px-3 py-2 bg-background border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary ${errors.quantite ? 'border-destructive' : 'border-border'}`}
-                placeholder="Ex: 50"
+                placeholder="Ex: 50.00"
               />
               {errors.quantite && <p className="mt-1 text-xs text-destructive">{errors.quantite}</p>}
             </div>
@@ -203,18 +200,6 @@ export default function StockMovementForm({ isOpen, onClose, onSubmit, movement 
               ))}
             </select>
             {errors.motif && <p className="mt-1 text-xs text-destructive">{errors.motif}</p>}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1">Date</label>
-            <input
-              type="date"
-              name="date"
-              value={formData.date}
-              onChange={handleChange}
-              className={`w-full px-3 py-2 bg-background border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary ${errors.date ? 'border-destructive' : 'border-border'}`}
-            />
-            {errors.date && <p className="mt-1 text-xs text-destructive">{errors.date}</p>}
           </div>
 
           <div className="flex gap-3 pt-4">
