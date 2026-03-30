@@ -7,7 +7,7 @@ import UsersPage from '../pages/users/UsersPage'
 import ClientsPage from '../pages/clients/ClientsPage'
 import SuppliersPage from '../pages/suppliers/SuppliersPage'
 import ArticlesPage from "../pages/articles/ArticlesPage"
-import ProductionPage from "../pages/production/ProductionPage"
+import ProductionLotsPage from "../pages/production/ProductionLotsPage"
 import StockPage from "../pages/stock/StockPage"
 import StockMovementsPage from "../pages/stock/StockMovementsPage"
 import SalesPage from "../pages/sales/SalesPage"
@@ -165,7 +165,7 @@ export default function AppRoutes() {
           path="/production"
           element={
             <ProtectedRoute allowedRoles={['ADMIN', 'STOCK']}>
-              <ProductionPage />
+              <ProductionLotsPage />
             </ProtectedRoute>
           }
         />
