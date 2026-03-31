@@ -29,7 +29,7 @@ class SaleFactory extends Factory
             'quantite' => $quantite,
             'prix_unitaire' => $prixUnitaire,
             'montant_total' => round($quantite * $prixUnitaire, 2),
-            'status' => fake()->randomElement(['En attente', 'Payee', 'Annulee']),
+            'status' => fake()->randomElement(['En attente', 'Validée', 'Annulee']),
             'date_vente' => fake()->date(),
         ];
     }
