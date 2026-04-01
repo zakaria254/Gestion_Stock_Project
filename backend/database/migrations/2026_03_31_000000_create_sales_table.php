@@ -14,13 +14,13 @@ return new class extends Migration
         Schema::create('sales', function (Blueprint $table) {
             $table->id();
             $table->string('numero')->unique();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('client_id')->constrained()->onDelete('cascade');
-            $table->foreignId('article_id')->constrained()->onDelete('cascade');
-            $table->decimal('quantite', 10, 2);
-            $table->decimal('prix_unitaire', 10, 2);
             $table->decimal('montant_total', 10, 2);
             $table->string('status')->default('En attente');
-            $table->date('date_vente');
+            $table->string('adresse_livraison')->nullable();
+            $table->date('date_livraison')->nullable();
+            $table->date('date_vente')->default(date('Y-m-d H:i:s'));
             $table->timestamps();
         });
     }

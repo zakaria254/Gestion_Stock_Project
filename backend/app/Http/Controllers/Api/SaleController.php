@@ -14,7 +14,7 @@ class SaleController extends Controller
      */
     public function index()
     {
-        $sales = Sale::with(['client', 'article'])->latest()->paginate(12);
+        $sales = Sale::with(['client', 'articles', 'user'])->latest()->paginate(12);
 
         return SaleResource::collection($sales);
     }
@@ -26,7 +26,7 @@ class SaleController extends Controller
     {
         $validated = $request->validated();
         $sale = Sale::create($validated);
-        $sale->load(['client', 'article']);
+        $sale->load(['client', 'articles', 'user']);
 
         return (new SaleResource($sale))->response()->setStatusCode(201);
     }
@@ -46,7 +46,7 @@ class SaleController extends Controller
     {
         $validated = $request->validated();
         $sale->update($validated);
-        $sale->load(['client', 'article']);
+        $sale->load(['client', 'articles', 'user']);
 
         return new SaleResource($sale);
     }

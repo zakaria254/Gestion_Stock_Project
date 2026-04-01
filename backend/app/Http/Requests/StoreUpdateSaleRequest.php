@@ -25,12 +25,13 @@ class StoreUpdateSaleRequest extends FormRequest
         return [
             'numero' => 'required|string|min:5|max:20|unique:sales,numero,' . $this->sale?->id,
             'client_id' => 'required|exists:clients,id',
-            'article_id' => 'required|exists:articles,id',
-            'quantite' => 'required|decimal:0,2|gt:0',
-            'prix_unitaire' => 'required|decimal:0,2|gt:0',
-            'montant_total' => 'required|decimal:0,2|gt:0',
-            'status' => 'required|string|max:30',
-            'date_vente' => 'required|date',
+            'adresse_livraison' => 'nullable|string|max:255',
+            'status' => 'nullable|string|max:30',
+            'date_livraison' => 'nullable|date',
+            'date_vente' => 'nullable|date',
+            'articles' => 'required|array|min:1',
+            'articles.*.id' => 'required|exists:articles,id',
+            'articles.*.'
         ];
     }
 }
