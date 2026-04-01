@@ -31,7 +31,8 @@ class StoreUpdateSaleRequest extends FormRequest
             'date_vente' => 'nullable|date',
             'articles' => 'required|array|min:1',
             'articles.*.id' => 'required|exists:articles,id',
-            'articles.*.'
+            'articles.*.quantite' => 'required|numeric|gt:0',
+            'articles.*.prix_unitaire' => 'required|numeric|gt:0'
         ];
     }
 }
