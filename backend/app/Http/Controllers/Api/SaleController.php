@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreUpdateSaleRequest;
 use App\Http\Resources\SaleResource;
 use App\Models\Sale;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+
 
 class SaleController extends Controller
 {
@@ -80,15 +82,32 @@ class SaleController extends Controller
         // return new SaleResource($sale);
     }
 
+    public function validate_sale (Sale $sale) {
+        if ($sale->status === '	En attente') {
+            return DB::transaction(function () use ($sale) {
+                $sale->update([
+                    'status' => 'Validee'
+                ]);
+
+                
+            });
+            
+        }
+    }
+
     /**
      * Remove the specified resource from storage.
      */
     public function destroy(Sale $sale)
     {
         if ($sale->status === 'Annulee') {
-           $sale->delete();
+            $sale->delete();
 
             return response()->noContent(); 
         }
+
+        return response()->json([
+            'message' => 'action denied '
+        ], 403);
     }
 }
