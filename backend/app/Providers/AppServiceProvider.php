@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Events\SaleValidatedEvent;
+use App\Listeners\UpdateStockFromSaleListener;
 use App\Models\Stock;
 use App\Observers\StockObserver;
 use Illuminate\Auth\Notifications\ResetPassword;
@@ -15,7 +17,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        
     }
 
     /**
@@ -26,6 +28,7 @@ class AppServiceProvider extends ServiceProvider
         ResetPassword::createUrlUsing(function (object $notifiable, string $token) {
             return config('app.frontend_url')."/password-reset/$token?email={$notifiable->getEmailForPasswordReset()}";
         });
+
         
         //app abservers
         Stock::observe(StockObserver::class);
@@ -48,4 +51,10 @@ class AppServiceProvider extends ServiceProvider
             return $user && in_array($user->role, ["admin", "ventes", "stock"]);
         });
     }
+
+    protected $listen =  [
+        SaleValidatedEvent::class => [
+            UpdateStockFromSaleListener::class,
+        ],
+    ];
 }

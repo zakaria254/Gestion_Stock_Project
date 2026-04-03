@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Events\SaleValidatedEvent;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreUpdateSaleRequest;
 use App\Http\Resources\SaleResource;
 use App\Models\Sale;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -57,7 +57,6 @@ class SaleController extends Controller
             }
 
             $sale->load(['client', 'articles', 'user']);
-        
             return (new SaleResource($sale))->response()->setStatusCode(201);
         });
     }
@@ -89,10 +88,16 @@ class SaleController extends Controller
                     'status' => 'Validee'
                 ]);
 
-                
+                //trigger the event to decrese the stock of the articles in the sale after the sale is validated 
+                event(new SaleValidatedEvent($sale));
+
+                return new SaleResource($sale);
             });
-            
         }
+
+        return response()->json([
+            'mesage' => 'this sale can not be validated ',
+        ], 200);
     }
 
     /**
