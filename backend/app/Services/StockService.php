@@ -16,16 +16,22 @@ class StockService
 
     public function decrement ($article_id, $quantite) 
     {
-        $stock = Stock::where('article_id', $article_id)->get();
+        $stock = Stock::where('article_id', $article_id)->first();
         
-        if ($stock->stock_actuel >= $quantite) 
+        if ($stock && $stock->stock_actuel >= $quantite) 
         {
             return $stock->decrement('stock_actuel',$quantite);
         }
+
+        return false;
     }
 
-    public function inrecment ($article_id, $quantite) 
+    public function increment ($article_id, $quantite) 
     {
-        return Stock::where('article_id', $article_id)->inrecment('stock_actuel', $quantite);
+        $stock = Stock::where('article_id', $article_id)->first();
+        if ($stock) 
+        {
+            return $stock->increment('stock_actuel', $quantite);
+        }
     }
 }

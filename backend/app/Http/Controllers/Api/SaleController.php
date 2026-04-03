@@ -91,7 +91,7 @@ class SaleController extends Controller
                 //trigger the event to decrese the stock of the articles in the sale after the sale is validated 
                 event(new SaleValidatedEvent($sale));
 
-                return new SaleResource($sale);
+                return new SaleResource($sale->load(['articles', 'client', 'user']));
             });
         }
 

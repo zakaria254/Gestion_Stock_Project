@@ -7,7 +7,7 @@ use App\Services\StockService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 
-class UpdateStockFromSaleListener
+class UpdateStockFromSaleListener implements ShouldQueue
 {
     /**
      * Create the event listener.
