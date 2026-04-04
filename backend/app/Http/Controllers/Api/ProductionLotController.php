@@ -15,10 +15,9 @@ class ProductionLotController extends Controller
      */
     public function index()
     {
-        $lots = ProductionLot::with('article')->paginate(12);
+        $lots = ProductionLot::with('article')->latest()->paginate(12);
 
         return ProductionLotResource::collection($lots);
-
     }
 
     /**
@@ -29,7 +28,7 @@ class ProductionLotController extends Controller
         $validated = $request->validated();
         $lot = ProductionLot::create($validated);
         $lot->load('article');
-        
+
 
         return (new ProductionLotResource($lot))->response()->setStatusCode(201);
     }
@@ -47,11 +46,17 @@ class ProductionLotController extends Controller
      */
     public function update(StoreUpdateProductionLotRequest $request, ProductionLot $production_lot)
     {
-        $validated = $request->validated();
-        $production_lot->update($validated);
-        $production_lot->load('article');
+        if ($production_lot->status !== 'COMPLETED') {
+            $validated = $request->validated();
+            $production_lot->update($validated);
+            $production_lot->load('article');
 
-        return new ProductionLotResource($production_lot);
+            return new ProductionLotResource($production_lot);
+        } else {
+            return response()->json([
+                'message' => 'this action is denied'
+            ], 403);
+        }
     }
 
     /**

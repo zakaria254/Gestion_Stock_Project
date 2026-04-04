@@ -27,7 +27,7 @@ class StoreUpdateProductionLotRequest extends FormRequest
             'quantite' => 'required|decimal:0,2|gt:0',
             'article_id' => 'required|exists:articles,id',
             'status' => 'required|string|in:AVAILABLE,IN_PROGRESS,COMPLETED',
-            'date_production' => 'required|date',
+            'date_production' => 'nullable|date',
             'certificat_abattage' => 'nullable|string'
         ];
     }

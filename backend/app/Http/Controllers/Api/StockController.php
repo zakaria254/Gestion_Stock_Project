@@ -11,7 +11,7 @@ class StockController extends Controller
 {
     public function index () 
     {
-        $stocks = Stock::with('article')->paginate(12);
+        $stocks = Stock::with('article')->latest()->paginate(12);
 
         return StockResource::collection($stocks);
     }

@@ -152,13 +152,15 @@ export default function ProductionPage() {
 
   const renderActions = (prod) => (
     <>
-      <button
-        onClick={() => handleEdit(prod)}
-        className="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors"
-        title="Modifier"
-      >
-        <Pencil className="h-4 w-4" />
-      </button>
+      {prod.status !== 'TERMINE' && (
+        <button
+          onClick={() => handleEdit(prod)}
+          className="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors"
+          title="Modifier"
+        >
+          <Pencil className="h-4 w-4" />
+        </button>
+      )}
       <button
         onClick={() => handleDelete(prod)}
         className="p-1.5 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
