@@ -12,7 +12,9 @@ class StockMovementObserver
      */
     public function created(StockMovement $stockMovement): void
     {
-        $this->applyStockChange($stockMovement->type, $stockMovement->article_id, $stockMovement->quantite);
+        $article_id = $stockMovement->stock->article_id;
+
+        $this->applyStockChange($stockMovement->type, $article_id, $stockMovement->quantite);
         // $stock_service = new StockService;
         // if ($stockMovement->type === 'in') {
         //     $stock_service->increment($stockMovement->article_id, $stockMovement->quantite);
@@ -27,7 +29,7 @@ class StockMovementObserver
     public function updated(StockMovement $stockMovement): void
     {
         if (!$stockMovement->wasChanged(['quantite', 'type'])) return;
-        $article_id = $stockMovement->article_id;
+        $article_id = $stockMovement->stock->article_id;
         $new_type = $stockMovement->type;
         $old_type = $stockMovement->getOriginal('type');
         $new_quantite = $stockMovement->quantite;
@@ -55,7 +57,7 @@ class StockMovementObserver
         // }
     }
 
-    public function applyStockChange (string $type, string $article_id, float $quantite) 
+    public function applyStockChange (string $type, int $article_id, float $quantite) 
     {
         $stock_service = new StockService;
         $method = $type === 'in' ? 'increment' : 'decrement';

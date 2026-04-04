@@ -36,7 +36,7 @@ class ProductionLotObserver
         $new_quantite = $productionLot->quantite; 
         
 
-        if ($productionLot->wasChenged('status') && $new_status === 'COMPLETED')
+        if ($productionLot->wasChanged('status') && $new_status === 'COMPLETED')
         {
             $stock = $productionLot->article->stock;
             if ($stock) {
