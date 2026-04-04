@@ -26,8 +26,13 @@ class Sale extends Model
         return $this->belongsTo(Client::class);
     }
 
-    public function article()
+    public function user()
     {
-        return $this->belongsTo(Article::class);
+        return $this->belongsTo(User::class);
+    }
+
+    public function articles()
+    {
+        return $this->belongsToMany(Article::class);
     }
 }
