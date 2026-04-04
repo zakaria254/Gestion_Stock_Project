@@ -16,7 +16,7 @@ class StockMovementController extends Controller
     public function index()
     {
         //first load the stock then for each stock load its associated article (Nested Eager Loading)
-        $movments = StockMovement::with('stock.article')->paginate(12);
+        $movments = StockMovement::with('stock.article')->latest()->paginate(12);
 
         return StockMovementResource::collection($movments);
     }
