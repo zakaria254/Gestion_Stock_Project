@@ -53,8 +53,8 @@ export default function InvoicesPage() {
             <tr>
               <td>${item?.articleNom || "-"}</td>
               <td style="text-align: center;">${Number(item?.quantite || 0)}</td>
-              <td style="text-align: right;">${Number(item?.prixUnitaire || 0).toFixed(2)} €</td>
-              <td style="text-align: right;">${Number(item?.total || (Number(item?.quantite || 0) * Number(item?.prixUnitaire || 0))).toFixed(2)} €</td>
+              <td style="text-align: right;">${Number(item?.prixUnitaire || 0).toFixed(2)} MAD</td>
+              <td style="text-align: right;">${Number(item?.total || (Number(item?.quantite || 0) * Number(item?.prixUnitaire || 0))).toFixed(2)} MAD</td>
             </tr>
           `).join('')
         : `<tr><td colspan="4" style="text-align: center; font-style: italic; color: #666;">Aucun article enregistré pour cette facture.</td></tr>`
@@ -122,15 +122,15 @@ export default function InvoicesPage() {
             <div class="totals">
               <div class="totals-row">
                 <span>Total HT:</span>
-                <span>${subTotal.toFixed(2)} €</span>
+                <span>${subTotal.toFixed(2)} MAD</span>
               </div>
               <div class="totals-row">
                 <span>TVA (20%):</span>
-                <span>${tva.toFixed(2)} €</span>
+                <span>${tva.toFixed(2)} MAD</span>
               </div>
               <div class="totals-row grand-total">
                 <span>Total TTC:</span>
-                <span>${totalTTC.toFixed(2)} €</span>
+                <span>${totalTTC.toFixed(2)} MAD</span>
               </div>
             </div>
             <div class="clear"></div>
@@ -165,7 +165,7 @@ export default function InvoicesPage() {
     { key: 'numero', label: 'RÉFÉRENCE', render: (item) => <span className="font-mono font-bold text-slate-900">{item.numero}</span> },
     { key: 'clientNom', label: 'CLIENT', render: (item) => <span className="font-semibold text-slate-700">{item.clientNom}</span> },
     { key: 'dateEmission', label: "DATE D'ÉMISSION", render: (item) => <span className="text-slate-500 font-medium">{new Date(item.dateEmission).toLocaleDateString("fr-FR")}</span> },
-    { key: 'montantTotal', label: 'MONTANT TTC', render: (item) => <span className="font-black text-slate-900">{Number(item.montantTotal || 0).toFixed(2)} €</span> },
+    { key: 'montantTotal', label: 'MONTANT TTC', render: (item) => <span className="font-black text-slate-900">{Number(item.montantTotal || 0).toFixed(2)} MAD</span> },
     { key: 'status', label: 'STATUT', render: (item) => getStatusBadge(item.status) },
   ]
 

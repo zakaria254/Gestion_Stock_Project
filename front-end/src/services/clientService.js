@@ -3,7 +3,8 @@ import { api } from './api';
 export const clientService = {
   getAll: async () => {
     const response = await api.get('/clients');
-    return response.data;
+    const data = response.data?.data || response.data || [];
+    return Array.isArray(data) ? data : [];
   },
 
   create: async (data) => {

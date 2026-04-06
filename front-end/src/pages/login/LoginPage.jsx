@@ -1,53 +1,48 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../../context/AuthContext'
-import { Lock, Mail, Eye, EyeOff, Loader2 } from 'lucide-react'
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
+import { Lock, Mail, Eye, EyeOff, Loader2 } from "lucide-react";
+import logo from "../../assets/logo.jpg";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('')
-  const [accessCode, setAccessCode] = useState('')
-  const [showCode, setShowCode] = useState(false)
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
-  const { login } = useAuth()
-  const navigate = useNavigate()
+  const [email, setEmail] = useState("");
+  const [accessCode, setAccessCode] = useState("");
+  const [showCode, setShowCode] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setError('')
-    setLoading(true)
+    e.preventDefault();
+    setError("");
+    setLoading(true);
 
     try {
-      const result = await login(email, accessCode)
+      const result = await login(email, accessCode);
       if (result.success) {
-        navigate('/dashboard')
+        navigate("/dashboard");
       } else {
-        setError(result.message)
+        setError(result.message);
       }
     } catch {
-      setError('Une erreur est survenue. Veuillez réessayer.')
+      setError("Une erreur est survenue. Veuillez réessayer.");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-primary-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo et Titre */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary-600 text-white mb-4 shadow-lg">
-            <svg 
-              className="w-10 h-10" 
-              viewBox="0 0 24 24" 
-              fill="none" 
-              stroke="currentColor" 
-              strokeWidth="2"
-            >
-              <path d="M12 2L2 7l10 5 10-5-10-5z" />
-              <path d="M2 17l10 5 10-5" />
-              <path d="M2 12l10 5 10-5" />
-            </svg>
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary-600 text-white mb-4 shadow-lg overflow-hidden">
+            <img
+              src={logo}
+              alt="Logo"
+              className="w-full h-full object-cover"
+            />
           </div>
           <h1 className="text-2xl font-bold text-foreground">
             Gestion Stock Halal
@@ -73,8 +68,8 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Email */}
             <div>
-              <label 
-                htmlFor="email" 
+              <label
+                htmlFor="email"
                 className="block text-sm font-medium text-card-foreground mb-2"
               >
                 Adresse email
@@ -97,8 +92,8 @@ export default function LoginPage() {
 
             {/* Code d'accès */}
             <div>
-              <label 
-                htmlFor="accessCode" 
+              <label
+                htmlFor="accessCode"
                 className="block text-sm font-medium text-card-foreground mb-2"
               >
                 {"Code d'accès"}
@@ -109,7 +104,7 @@ export default function LoginPage() {
                 </div>
                 <input
                   id="accessCode"
-                  type={showCode ? 'text' : 'password'}
+                  type={showCode ? "text" : "password"}
                   value={accessCode}
                   onChange={(e) => setAccessCode(e.target.value)}
                   placeholder="abc123"
@@ -142,17 +137,19 @@ export default function LoginPage() {
                   Connexion en cours...
                 </>
               ) : (
-                'Se connecter'
+                "Se connecter"
               )}
             </button>
           </form>
 
           {/* Aide */}
           <p className="mt-6 text-center text-sm text-muted-foreground">
-            {"Contactez votre administrateur si vous avez oublié vos identifiants."}
+            {
+              "Contactez votre administrateur si vous avez oublié vos identifiants."
+            }
           </p>
         </div>
       </div>
     </div>
-  )
+  );
 }

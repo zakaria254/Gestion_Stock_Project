@@ -1,177 +1,208 @@
 // src/components/forms/SaleForm.jsx
-import { useState, useEffect } from 'react'
-import { X, Plus, Trash2 } from 'lucide-react'
-import { stockService } from '../../services/api'
-import { SALE_STATUS } from '../../data/mockData'
+import { useState, useEffect } from "react";
+import { X, Plus, Trash2 } from "lucide-react";
+import { stockService } from "../../services/stockService";
 
-export default function SaleForm({ isOpen, onClose, onSubmit, clients = [], articles = [], isLoading = false }) {
+export default function SaleForm({
+  isOpen,
+  onClose,
+  onSubmit,
+  clients = [],
+  articles = [],
+  isLoading = false,
+}) {
   const [formData, setFormData] = useState({
-    clientId: '',
-    adresseLivraison: '',
-    dateLivraison: new Date().toISOString().split('T')[0],
-  })
+    clientId: "",
+    adresseLivraison: "",
+    dateLivraison: new Date().toISOString().split("T")[0],
+  });
 
   // Cart system
-  const [items, setItems] = useState([])
-  const [currentArticleId, setCurrentArticleId] = useState('')
-  const [currentQuantity, setCurrentQuantity] = useState('')
-  
+  const [items, setItems] = useState([]);
+  const [currentArticleId, setCurrentArticleId] = useState("");
+  const [currentQuantity, setCurrentQuantity] = useState("");
+
   // Real-time stock dictionary: { articleId: availableStockQuantity }
-  const [stockMap, setStockMap] = useState({})
-  
-  const [errors, setErrors] = useState({})
-  const [cartError, setCartError] = useState('')
+  const [stockMap, setStockMap] = useState({});
+
+  const [errors, setErrors] = useState({});
+  const [cartError, setCartError] = useState("");
 
   // Fetch true stock on mount or when opening
   useEffect(() => {
     if (isOpen) {
       const fetchStock = async () => {
         try {
-          const stockData = await stockService.getStock()
-          const newStockMap = {}
-          stockData.forEach(s => {
-            newStockMap[Number(s.articleId)] = s.stockActuel
-          })
-          setStockMap(newStockMap)
+          const stockData = await stockService.getStock();
+          const newStockMap = {};
+          stockData.forEach((s) => {
+            newStockMap[Number(s.articleId)] = s.stockActuel;
+          });
+          setStockMap(newStockMap);
         } catch (error) {
-          console.error("Error fetching stock mapping:", error)
+          console.error("Error fetching stock mapping:", error);
         }
-      }
-      fetchStock()
+      };
+      fetchStock();
     }
-  }, [isOpen])
+  }, [isOpen]);
 
   // Reset form when opened fresh
   useEffect(() => {
     if (isOpen) {
       setFormData({
-        clientId: clients.length > 0 ? clients[0].id : '',
-        adresseLivraison: '',
-        dateLivraison: new Date().toISOString().split('T')[0],
-      })
-      setItems([])
-      setCurrentArticleId('')
-      setCurrentQuantity('')
-      setErrors({})
-      setCartError('')
+        clientId: clients.length > 0 ? clients[0].id : "",
+        adresseLivraison: "",
+        dateLivraison: new Date().toISOString().split("T")[0],
+      });
+      setItems([]);
+      setCurrentArticleId("");
+      setCurrentQuantity("");
+      setErrors({});
+      setCartError("");
     }
-  }, [isOpen, clients])
+  }, [isOpen, clients]);
 
   // Auto-fill address when client changes
   useEffect(() => {
     if (formData.clientId) {
-      const client = clients.find(c => String(c.id) === String(formData.clientId))
+      const client = clients.find(
+        (c) => String(c.id) === String(formData.clientId),
+      );
       if (client && !formData.adresseLivraison) {
-        setFormData(prev => ({ ...prev, adresseLivraison: client.adresse }))
+        setFormData((prev) => ({ ...prev, adresseLivraison: client.adresse }));
       }
     }
-  }, [formData.clientId, clients, formData.adresseLivraison])
+  }, [formData.clientId, clients, formData.adresseLivraison]);
 
   const handleAddItem = () => {
-    setCartError('')
+    setCartError("");
     if (!currentArticleId || !currentQuantity) {
-      setCartError('Veuillez sélectionner un article et une quantité.')
-      return
+      setCartError("Veuillez sélectionner un article et une quantité.");
+      return;
     }
 
-    const qty = Number(currentQuantity)
+    const qty = Number(currentQuantity);
     if (isNaN(qty) || qty <= 0) {
-      setCartError('La quantité doit être supérieure à 0.')
-      return
+      setCartError("La quantité doit être supérieure à 0.");
+      return;
     }
 
     // CHECK STOCK FRONTEND (Stock validation Mandatory)
-    const availableStock = stockMap[Number(currentArticleId)] ?? 0
-    
+    const availableStock = stockMap[Number(currentArticleId)] ?? 0;
+
     // Check if item is already in cart, if so, we need to consider total qty
-    const existingItemIndex = items.findIndex(i => String(i.articleId) === String(currentArticleId))
-    const existingQty = existingItemIndex >= 0 ? items[existingItemIndex].quantite : 0
-    const totalRequestedQty = existingQty + qty
+    const existingItemIndex = items.findIndex(
+      (i) => String(i.articleId) === String(currentArticleId),
+    );
+    const existingQty =
+      existingItemIndex >= 0 ? items[existingItemIndex].quantite : 0;
+    const totalRequestedQty = existingQty + qty;
 
     if (totalRequestedQty > availableStock) {
-      setCartError(`Stock insuffisant pour cet article. Stock disponible: ${availableStock}`)
-      return
+      setCartError(
+        `Stock insuffisant pour cet article. Stock disponible: ${availableStock}`,
+      );
+      return;
     }
 
-    const article = articles.find(a => String(a.id) === String(currentArticleId))
-    if (!article) return
+    const article = articles.find(
+      (a) => String(a.id) === String(currentArticleId),
+    );
+    if (!article) return;
 
     if (existingItemIndex >= 0) {
       // Update existing row
-      const newItems = [...items]
-      newItems[existingItemIndex].quantite += qty
-      newItems[existingItemIndex].total = newItems[existingItemIndex].quantite * newItems[existingItemIndex].prixUnitaire
-      setItems(newItems)
+      const newItems = [...items];
+      newItems[existingItemIndex].quantite += qty;
+      const unitPrice = Number(newItems[existingItemIndex].prixUnitaire || 0);
+      newItems[existingItemIndex].total = newItems[existingItemIndex].quantite * unitPrice;
+      setItems(newItems);
     } else {
       // Add new row
-      setItems([...items, {
-        articleId: article.id,
-        articleNom: article.nom,
-        quantite: qty,
-        prixUnitaire: article.prix,
-        total: qty * article.prix
-      }])
+      const unitPrice = Number(article.prix || 0);
+      setItems([
+        ...items,
+        {
+          articleId: article.id,
+          articleNom: article.nom,
+          quantite: qty,
+          prixUnitaire: unitPrice,
+          total: qty * unitPrice,
+        },
+      ]);
     }
 
     // Reset inputs
-    setCurrentArticleId('')
-    setCurrentQuantity('')
-  }
+    setCurrentArticleId("");
+    setCurrentQuantity("");
+  };
 
   const handleRemoveItem = (index) => {
-    const newItems = [...items]
-    newItems.splice(index, 1)
-    setItems(newItems)
-  }
+    const newItems = [...items];
+    newItems.splice(index, 1);
+    setItems(newItems);
+  };
 
   const validate = () => {
-    const newErrors = {}
-    if (!formData.clientId) newErrors.clientId = 'Veuillez sélectionner un client'
-    if (!formData.adresseLivraison) newErrors.adresseLivraison = "L'adresse est requise"
-    if (!formData.dateLivraison) newErrors.dateLivraison = 'La date de livraison est requise'
-    if (items.length === 0) newErrors.items = 'Le panier ne peut pas être vide'
+    const newErrors = {};
+    if (!formData.clientId)
+      newErrors.clientId = "Veuillez sélectionner un client";
+    if (!formData.adresseLivraison)
+      newErrors.adresseLivraison = "L'adresse est requise";
+    if (!formData.dateLivraison)
+      newErrors.dateLivraison = "La date de livraison est requise";
+    if (items.length === 0) newErrors.items = "Le panier ne peut pas être vide";
 
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = (e) => {
-    e.preventDefault()
+    e.preventDefault();
     if (validate()) {
-      const grandTotal = items.reduce((sum, item) => sum + item.total, 0)
-      onSubmit({
-        ...formData,
-        clientId: Number(formData.clientId),
-        total: grandTotal,
-      }, items)
+      const grandTotal = items.reduce((sum, item) => sum + item.total, 0);
+      onSubmit(
+        {
+          ...formData,
+          clientId: Number(formData.clientId),
+          total: grandTotal,
+        },
+        items,
+      );
     }
-  }
+  };
 
   const handleChange = (e) => {
-    const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }))
+      setErrors((prev) => ({ ...prev, [name]: "" }));
     }
-  }
+  };
 
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
-  const grandTotal = items.reduce((sum, item) => sum + item.total, 0)
+  const grandTotal = items.reduce((sum, item) => sum + item.total, 0);
 
   // Current article selected stock display
-  const currentSelectedStock = currentArticleId ? (stockMap[Number(currentArticleId)] ?? 0) : null
+  const currentSelectedStock = currentArticleId
+    ? (stockMap[Number(currentArticleId)] ?? 0)
+    : null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
 
       <div className="relative bg-card rounded-xl border border-border shadow-xl w-full max-w-2xl mx-4 max-h-[90vh] flex flex-col">
-        <div className="flex items-center justify-between p-4 border-b border-border shrink-0">
+          <div className="flex items-center justify-between p-4 border-b border-border shrink-0">
           <h2 className="text-lg font-semibold text-foreground">
             Nouvelle Vente
           </h2>
-          <button onClick={onClose} className="p-1 rounded-lg hover:bg-muted transition-colors">
+          <button
+            onClick={onClose}
+            className="p-1 rounded-lg hover:bg-muted transition-colors"
+          >
             <X className="h-5 w-5 text-muted-foreground" />
           </button>
         </div>
@@ -180,52 +211,76 @@ export default function SaleForm({ isOpen, onClose, onSubmit, clients = [], arti
           {/* General Information */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1">Client</label>
+              <label className="block text-sm font-medium text-foreground mb-1">
+                Client
+              </label>
               <select
                 name="clientId"
                 value={formData.clientId}
                 onChange={(e) => {
                   handleChange(e);
-                  const client = clients.find(c => String(c.id) === e.target.value);
+                  const client = clients.find(
+                    (c) => String(c.id) === e.target.value,
+                  );
                   if (client) {
-                    setFormData(prev => ({ ...prev, adresseLivraison: client.adresse }));
+                    setFormData((prev) => ({
+                      ...prev,
+                      adresseLivraison: client.adresse,
+                    }));
                   }
                 }}
-                className={`w-full px-3 py-2 bg-background border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary ${errors.clientId ? 'border-destructive' : 'border-border'}`}
+                className={`w-full px-3 py-2 bg-background border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary ${errors.clientId ? "border-destructive" : "border-border"}`}
               >
                 <option value="">Sélectionner un client...</option>
-                {clients.map(client => (
-                  <option key={client.id} value={client.id}>
-                    {client.nom} ({client.type})
-                  </option>
-                ))}
+                {clients &&
+                  clients.map((client) => (
+                    <option key={client.id} value={client.id}>
+                      {client.nom} ({client.type})
+                    </option>
+                  ))}
               </select>
-              {errors.clientId && <p className="mt-1 text-xs text-destructive">{errors.clientId}</p>}
+              {errors.clientId && (
+                <p className="mt-1 text-xs text-destructive">
+                  {errors.clientId}
+                </p>
+              )}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1">Date de Livraison</label>
+              <label className="block text-sm font-medium text-foreground mb-1">
+                Date de Livraison
+              </label>
               <input
                 type="date"
                 name="dateLivraison"
                 value={formData.dateLivraison}
                 onChange={handleChange}
-                className={`w-full px-3 py-2 bg-background border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary ${errors.dateLivraison ? 'border-destructive' : 'border-border'}`}
+                className={`w-full px-3 py-2 bg-background border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary ${errors.dateLivraison ? "border-destructive" : "border-border"}`}
               />
-              {errors.dateLivraison && <p className="mt-1 text-xs text-destructive">{errors.dateLivraison}</p>}
+              {errors.dateLivraison && (
+                <p className="mt-1 text-xs text-destructive">
+                  {errors.dateLivraison}
+                </p>
+              )}
             </div>
 
             <div className="sm:col-span-2">
-              <label className="block text-sm font-medium text-foreground mb-1">Adresse de Livraison</label>
+              <label className="block text-sm font-medium text-foreground mb-1">
+                Adresse de Livraison
+              </label>
               <input
                 type="text"
                 name="adresseLivraison"
                 value={formData.adresseLivraison}
                 onChange={handleChange}
-                className={`w-full px-3 py-2 bg-background border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary ${errors.adresseLivraison ? 'border-destructive' : 'border-border'}`}
+                className={`w-full px-3 py-2 bg-background border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary ${errors.adresseLivraison ? "border-destructive" : "border-border"}`}
                 placeholder="Adresse complète"
               />
-              {errors.adresseLivraison && <p className="mt-1 text-xs text-destructive">{errors.adresseLivraison}</p>}
+              {errors.adresseLivraison && (
+                <p className="mt-1 text-xs text-destructive">
+                  {errors.adresseLivraison}
+                </p>
+              )}
             </div>
           </div>
 
@@ -233,31 +288,39 @@ export default function SaleForm({ isOpen, onClose, onSubmit, clients = [], arti
 
           {/* Cart System */}
           <div>
-            <h3 className="text-md font-semibold text-foreground mb-3">Panier d'Articles</h3>
-            
+            <h3 className="text-md font-semibold text-foreground mb-3">
+              Panier d'Articles
+            </h3>
+
             <div className="flex items-end gap-3 mb-4">
               <div className="flex-1">
-                <label className="block text-xs font-medium text-muted-foreground mb-1">Article</label>
+                <label className="block text-xs font-medium text-muted-foreground mb-1">
+                  Article
+                </label>
                 <select
                   value={currentArticleId}
                   onChange={(e) => setCurrentArticleId(e.target.value)}
                   className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                 >
                   <option value="">Sélectionner...</option>
-                  {articles.map(article => (
+                  {articles.map((article) => (
                     <option key={article.id} value={article.id}>
-                      {article.nom} - {article.prix}€/{article.unite}
+                      {article.nom} - {article.prix} MAD/{article.unite}
                     </option>
                   ))}
-                </select>
+              </select>
                 {currentSelectedStock !== null && (
-                  <p className={`mt-1 text-xs font-medium ${currentSelectedStock > 0 ? 'text-green-600' : 'text-red-500'}`}>
+                  <p
+                    className={`mt-1 text-xs font-medium ${currentSelectedStock > 0 ? "text-green-600" : "text-red-500"}`}
+                  >
                     Stock actuel: {currentSelectedStock}
                   </p>
                 )}
               </div>
               <div className="w-24">
-                <label className="block text-xs font-medium text-muted-foreground mb-1">Quantité</label>
+                <label className="block text-xs font-medium text-muted-foreground mb-1">
+                  Quantité
+                </label>
                 <input
                   type="number"
                   min="0"
@@ -303,11 +366,20 @@ export default function SaleForm({ isOpen, onClose, onSubmit, clients = [], arti
                   </thead>
                   <tbody>
                     {items.map((item, index) => (
-                      <tr key={index} className="border-b border-border hover:bg-muted/50 transition-colors">
-                        <td className="px-4 py-3 font-medium text-foreground">{item.articleNom}</td>
-                        <td className="px-4 py-3">{item.prixUnitaire.toFixed(2)}€</td>
+                      <tr
+                        key={index}
+                        className="border-b border-border hover:bg-muted/50 transition-colors"
+                      >
+                        <td className="px-4 py-3 font-medium text-foreground">
+                          {item.articleNom}
+                        </td>
+                        <td className="px-4 py-3">
+                          {Number(item.prixUnitaire || 0).toFixed(2)} MAD
+                        </td>
                         <td className="px-4 py-3">{item.quantite}</td>
-                        <td className="px-4 py-3 font-medium">{item.total.toFixed(2)}€</td>
+                        <td className="px-4 py-3 font-medium">
+                          {Number(item.total || 0).toFixed(2)} MAD
+                        </td>
                         <td className="px-4 py-3 text-right">
                           <button
                             onClick={() => handleRemoveItem(index)}
@@ -319,8 +391,15 @@ export default function SaleForm({ isOpen, onClose, onSubmit, clients = [], arti
                       </tr>
                     ))}
                     <tr className="bg-muted/30">
-                      <td colSpan="3" className="px-4 py-3 text-right font-semibold text-foreground">TOTAL:</td>
-                      <td className="px-4 py-3 font-bold text-primary text-lg">{grandTotal.toFixed(2)}€</td>
+                      <td
+                        colSpan="3"
+                        className="px-4 py-3 text-right font-semibold text-foreground"
+                      >
+                        TOTAL:
+                      </td>
+                      <td className="px-4 py-3 font-bold text-primary text-lg">
+                        {Number(grandTotal || 0).toFixed(2)} MAD
+                      </td>
                       <td></td>
                     </tr>
                   </tbody>
@@ -343,10 +422,10 @@ export default function SaleForm({ isOpen, onClose, onSubmit, clients = [], arti
             disabled={isLoading || items.length === 0}
             className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 disabled:opacity-50 transition-colors"
           >
-            {isLoading ? 'Création...' : 'Créer la commande'}
+            {isLoading ? "Création..." : "Créer la commande"}
           </button>
         </div>
       </div>
     </div>
-  )
+  );
 }
