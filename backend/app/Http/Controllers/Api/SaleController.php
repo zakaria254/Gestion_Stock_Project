@@ -82,7 +82,7 @@ class SaleController extends Controller
     }
 
     public function validate_sale (Sale $sale) {
-        if ($sale->status === '	En attente') {
+        if ($sale->status === 'En attente') {
             return DB::transaction(function () use ($sale) {
                 $sale->update([
                     'status' => 'Validee'
@@ -97,7 +97,7 @@ class SaleController extends Controller
 
         return response()->json([
             'mesage' => 'this sale can not be validated ',
-        ], 200);
+        ], 422);
     }
 
     /**

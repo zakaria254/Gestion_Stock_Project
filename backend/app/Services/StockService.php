@@ -33,5 +33,7 @@ class StockService
         {
             return $stock->increment('stock_actuel', $quantite);
         }
+
+        return false;
     }
 }
