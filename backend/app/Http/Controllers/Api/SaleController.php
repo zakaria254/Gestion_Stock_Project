@@ -97,7 +97,7 @@ class SaleController extends Controller
 
         return response()->json([
             'mesage' => 'this sale can not be validated ',
-        ], 422);
+        ], 403);
     }
 
     /**

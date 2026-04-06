@@ -4,9 +4,7 @@ namespace App\Listeners;
 
 use App\Events\SaleValidatedEvent;
 use App\Models\StockMovement;
-use Illuminate\Contracts\Queue\ShouldQueue;
-
-class UpdateStockFromSaleListener implements ShouldQueue
+class UpdateStockFromSaleListener
 {
     /**
      * Create the event listener.
