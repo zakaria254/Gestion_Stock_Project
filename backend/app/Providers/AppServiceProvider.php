@@ -2,8 +2,6 @@
 
 namespace App\Providers;
 
-use App\Events\SaleValidatedEvent;
-use App\Listeners\UpdateStockFromSaleListener;
 use App\Models\Article;
 use App\Models\ProductionLot;
 use App\Models\Stock;
@@ -61,11 +59,6 @@ class AppServiceProvider extends ServiceProvider
         });
     }
 
-    protected $listen =  [
-        SaleValidatedEvent::class => [
-            UpdateStockFromSaleListener::class,
-        ],
-    ];
 }
 
 

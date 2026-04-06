@@ -13,12 +13,17 @@ class Sale extends Model
     protected $fillable = [
         'numero',
         'client_id',
-        'article_id',
-        'quantite',
-        'prix_unitaire',
+        'user_id',
         'montant_total',
+        'adresse_livraison',
+        'date_livraison',
         'status',
         'date_vente',
+    ];
+
+    protected $casts = [
+        'date_vente' => 'datetime',
+        'date_livraison' => 'datetime',
     ];
 
     public function client()
@@ -33,6 +38,8 @@ class Sale extends Model
 
     public function articles()
     {
-        return $this->belongsToMany(Article::class);
+        return $this->belongsToMany(Article::class, 'sale_article')
+                    ->withPivot(['quantite', 'prix_unitaire', 'total'])
+                    ->withTimestamps();
     }
 }

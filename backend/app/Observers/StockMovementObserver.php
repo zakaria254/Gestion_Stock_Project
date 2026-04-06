@@ -38,7 +38,8 @@ class StockMovementObserver
 
         //reverse the old movement operation 
         $this->applyStockChange($reverse_type, $article_id, $old_quantite);
-        $this->applyStockChange($new_type, $article_id, $new_quantite); // apply the new operation
+        // apply the new operation
+        $this->applyStockChange($new_type, $article_id, $new_quantite);
         return;
         
 

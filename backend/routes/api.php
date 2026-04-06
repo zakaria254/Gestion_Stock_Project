@@ -31,6 +31,7 @@ Route::middleware(['auth:sanctum', 'can:admin_only'])->group(function () {
 Route::middleware(['auth:sanctum', 'can:ventes_admin_access'])->group(function () {
     Route::apiResource('clients', ClientController::class);
     Route::apiResource('sales', SaleController::class)->only(['index', 'store', 'destroy']);
+    Route::get('/sales/validate/{sale}', [SaleController::class, 'validate_sale']);
 });
 
 // routes admin and stock can access 

@@ -48,6 +48,7 @@ class SaleController extends Controller
                  'date_vente' => $validated['date_vente'] ?? date('Y-m-d H:i:s'),
             ]);
 
+            
             foreach ($validated['articles'] as $article) {
                 $sale->articles()->attach($article['id'], [
                     'quantite' => $article['quantite'],
@@ -55,7 +56,12 @@ class SaleController extends Controller
                     'total' => $article['quantite'] * $article['prix_unitaire']
                 ]);
             }
-
+            
+            //trigger the event to decrese the stock of the articles in the sale after the sale is validated 
+            if ($validated['status'] === 'Validee') {
+                event(new SaleValidatedEvent($sale));
+            }
+            
             $sale->load(['client', 'articles', 'user']);
             return (new SaleResource($sale))->response()->setStatusCode(201);
         });
@@ -82,7 +88,7 @@ class SaleController extends Controller
     }
 
     public function validate_sale (Sale $sale) {
-        if ($sale->status === '	En attente') {
+        if ($sale->status === 'En attente') {
             return DB::transaction(function () use ($sale) {
                 $sale->update([
                     'status' => 'Validee'
@@ -97,7 +103,7 @@ class SaleController extends Controller
 
         return response()->json([
             'mesage' => 'this sale can not be validated ',
-        ], 200);
+        ], 403);
     }
 
     /**
