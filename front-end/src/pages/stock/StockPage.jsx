@@ -37,8 +37,10 @@ export default function StockPage() {
   // - Stock <= seuil → "Faible"
   // - Stock = 0 → "Rupture"
   const getStatus = (stockActuel, seuilMinimum) => {
-    if (stockActuel <= 0) return { label: 'Rupture', className: 'bg-red-100 text-red-800' }
-    if (stockActuel <= seuilMinimum) return { label: 'Faible', className: 'bg-yellow-100 text-yellow-800' }
+    const current = Number(stockActuel || 0)
+    const threshold = Number(seuilMinimum || 0)
+    if (current <= 0) return { label: 'Rupture', className: 'bg-red-100 text-red-800' }
+    if (current <= threshold) return { label: 'Faible', className: 'bg-yellow-100 text-yellow-800' }
     return { label: 'Disponible', className: 'bg-green-100 text-green-800' }
   }
 

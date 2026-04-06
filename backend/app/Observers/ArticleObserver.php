@@ -24,7 +24,11 @@ class ArticleObserver
      */
     public function updated(Article $article): void
     {
-        //
+        if ($article->wasChanged('seuil_minimum')) {
+            $article->stock()->update([
+                'seuil_minimun' => $article->seuil_minimum
+            ]);
+        }
     }
 
     /**

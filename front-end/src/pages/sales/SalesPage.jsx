@@ -227,16 +227,7 @@ export default function SalesPage() {
             </button>
           </>
         )}
-        {status === SALE_STATUS.VALIDEE && (
-          <button
-            onClick={() => handleStatusChange(sale?.id, SALE_STATUS.ANNULEE)}
-            className="p-1.5 text-orange-500 hover:bg-orange-50 rounded-lg transition-colors"
-            title="Annuler la vente validée (remet le stock)"
-          >
-            <XCircle className="w-4 h-4" />
-          </button>
-        )}
-        {(status === SALE_STATUS.ANNULEE || status === "ANNULEE") && (
+        {status !== SALE_STATUS.VALIDEE && (
           <button
             onClick={() => handleDelete(sale?.id)}
             className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"

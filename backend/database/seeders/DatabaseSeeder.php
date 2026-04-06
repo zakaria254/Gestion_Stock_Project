@@ -18,12 +18,12 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        User::factory(10)->create();
 
         User::create([
-            'nom' => 'ZAKARIA',
+            'nom' => 'boubaker',
             'prenom'=>  'DEV',
-            'email' => 'admin1@test.com',
+            'email' => 'boubaker@gmail.com',
             'access_code' => 'admin123',
             'role' => 'admin',
             'status' => 'active',
@@ -31,19 +31,19 @@ class DatabaseSeeder extends Seeder
         
 
         //  Call my existing ArticleSeeder (without changing it)
-        $this->call([
-            ArticleSeeder::class,
-        ]);
+        // $this->call([
+        //     ArticleSeeder::class,
+        // ]);
 
-        //  Call my existing SupplierSeeder (without changing it)
-        $this->call([
-            SupplierSeeder::class,
-        ]);
+        // //  Call my existing SupplierSeeder (without changing it)
+        // $this->call([
+        //     SupplierSeeder::class,
+        // ]);
 
-        //  Call my existing ClientSeeder (without changing it)
-        $this->call([
-            ClientSeeder::class,
-        ]);
+        // //  Call my existing ClientSeeder (without changing it)
+        // $this->call([
+        //     ClientSeeder::class,
+        // ]);
 
 
         
