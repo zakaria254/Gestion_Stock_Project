@@ -48,6 +48,7 @@ class SaleController extends Controller
                  'date_vente' => $validated['date_vente'] ?? date('Y-m-d H:i:s'),
             ]);
 
+            
             foreach ($validated['articles'] as $article) {
                 $sale->articles()->attach($article['id'], [
                     'quantite' => $article['quantite'],
@@ -55,7 +56,12 @@ class SaleController extends Controller
                     'total' => $article['quantite'] * $article['prix_unitaire']
                 ]);
             }
-
+            
+            //trigger the event to decrese the stock of the articles in the sale after the sale is validated 
+            if ($validated['status'] === 'Validee') {
+                event(new SaleValidatedEvent($sale));
+            }
+            
             $sale->load(['client', 'articles', 'user']);
             return (new SaleResource($sale))->response()->setStatusCode(201);
         });

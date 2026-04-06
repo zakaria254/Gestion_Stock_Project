@@ -2,8 +2,6 @@
 
 namespace App\Providers;
 
-use App\Events\SaleValidatedEvent;
-use App\Listeners\UpdateStockFromSaleListener;
 use App\Models\Article;
 use App\Models\ProductionLot;
 use App\Models\Stock;
@@ -13,7 +11,6 @@ use App\Observers\ProductionLotObserver;
 use App\Observers\StockMovementObserver;
 use App\Observers\StockObserver;
 use Illuminate\Auth\Notifications\ResetPassword;
-use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -42,9 +39,6 @@ class AppServiceProvider extends ServiceProvider
         Article::observe(ArticleObserver::class);
         ProductionLot::observe(ProductionLotObserver::class);
         StockMovement::observe(StockMovementObserver::class);
-
-        // app events
-        Event::listen(SaleValidatedEvent::class, UpdateStockFromSaleListener::class);
 
 
         //app gates and permission

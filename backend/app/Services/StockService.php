@@ -17,23 +17,27 @@ class StockService
     public function decrement ($article_id, $quantite) 
     {
         $stock = Stock::where('article_id', $article_id)->first();
-        
-        if ($stock && $stock->stock_actuel >= $quantite) 
-        {
-            return $stock->decrement('stock_actuel',$quantite);
+
+        if (!$stock) {
+            throw new \RuntimeException("stock record not found for Article ID: {$article_id}");
         }
 
-        return false;
+        if ($stock->stock_actuel < $quantite) {
+            throw new \RuntimeException("Insufficient stock for Article ID: {$article_id}. Available: {$stock->stock_actuel}, Requested: {$quantite}");
+        }
+
+        return $stock->decrement('stock_actuel', $quantite);
     }
 
     public function increment ($article_id, $quantite) 
     {
         $stock = Stock::where('article_id', $article_id)->first();
-        if ($stock) 
+        if (!$stock) 
         {
-            return $stock->increment('stock_actuel', $quantite);
+            throw new \RuntimeException("Stock record not found for Article ID: {$article_id}");
         }
-
-        return false;
+        
+        return $stock->increment('stock_actuel', $quantite);
+        
     }
 }
