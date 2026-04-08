@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('production_lots', function (Blueprint $table) {
-            $table->string('status')->default('IN_PROGRESS');
+            $table->string('status')->default('IN_PROGRESS')->change();
         });
     }
 
@@ -22,7 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('production_lots', function (Blueprint $table) {
-            $table->string('status')->default('IN_PROGRESS');
+            $table->string('status')->default('IN_PROGRESS')->change();
         });
     }
 };
