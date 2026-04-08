@@ -34,31 +34,24 @@ class StockMovementObserver
         $old_type = $stockMovement->getOriginal('type');
         $new_quantite = $stockMovement->quantite;
         $old_quantite = $stockMovement->getOriginal('quantite');
-        $reverse_type = $old_type === 'in' ? 'out' : 'in'; 
+        $reverse_type = $old_type === 'in' ? 'out' : 'in';
+        // what was applyed to the stock when the movement was first created
+        $old_movement = $old_type === 'in' ? $old_quantite : -$old_quantite;
+        // what should applyed to the stock after the edite 
+        $new_movement = $new_type === 'in' ? $new_quantite : -$new_quantite;
 
-        //reverse the old movement operation 
-        $this->applyStockChange($reverse_type, $article_id, $old_quantite);
-        // apply the new operation
-        $this->applyStockChange($new_type, $article_id, $new_quantite);
+        $net_change = $new_movement - $old_movement;
+
+        if ($net_change > 0) {
+            $this->applyStockChange('in', $article_id, $net_change);
+        } else {
+            $this->applyStockChange('out', $article_id, abs($net_change));
+        }
+
         return;
-        
-
-        // if ($stockMovement->wasChanged('quantite') && !$stockMovement->wasChanged('type')) {
-        //     //reverse the old movement operation 
-        //     $this->applyStockChange($reverse_type, $article_id, $old_quantite);
-        //     $this->applyStockChange($new_type, $article_id, $new_quantite); // apply the new operation
-        //     return;
-        // }
-
-        // if ($stockMovement->wasChanged('type') && $stockMovement->wasChanged('quantite')) {
-        //     //reverse the old movement operation
-        //     $this->applyStockChange($reverse_type, $article_id, $old_quantite);
-        //     $this->applyStockChange($new_type, $article_id, $new_quantite); // apply the new operation
-        //     return;
-        // }
     }
 
-    public function applyStockChange (string $type, int $article_id, float $quantite) 
+    public function applyStockChange(string $type, int $article_id, float $quantite)
     {
         $stock_service = new StockService;
         $method = $type === 'in' ? 'increment' : 'decrement';
