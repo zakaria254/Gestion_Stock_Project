@@ -77,6 +77,25 @@ export const saleService = {
     return response.data?.data || response.data
   },
 
+  async update(id, saleData, items) {
+    const payload = {
+      numero: saleData.numero,
+      client_id: saleData.clientId,
+      adresse_livraison: saleData.adresseLivraison || '',
+      date_livraison: saleData.dateLivraison || null,
+      date_vente: saleData.dateLivraison || new Date().toISOString().split('T')[0],
+      status: saleData.status || 'En attente',
+      articles: items.map((item) => ({
+        id: item.articleId,
+        quantite: item.quantite,
+        prix_unitaire: item.prixUnitaire,
+      })),
+    }
+
+    const response = await api.put(`/sales/${id}`, payload)
+    return response.data?.data || response.data
+  },
+
   async updateSaleStatus(id, newStatus) {
     if (newStatus === SALE_STATUS.VALIDEE) {
       const response = await api.get(`/sales/validate/${id}`)

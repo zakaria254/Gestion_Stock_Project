@@ -80,11 +80,17 @@ class SaleController extends Controller
      */
     public function update(StoreUpdateSaleRequest $request, Sale $sale)
     {
-        // $validated = $request->validated();
-        // $sale->update($validated);
-        // $sale->load(['client', 'articles', 'user']);
+        if ($sale->status !== 'Validee') {
+            $validated = $request->validated();
+            $sale->update($validated);
+            $sale->load(['client', 'articles', 'user']);
 
-        // return new SaleResource($sale);
+            return new SaleResource($sale);
+        } 
+
+        return response()->json([
+            'message' => 'action denied !'
+        ], 403);
     }
 
     public function validate_sale (Sale $sale) {

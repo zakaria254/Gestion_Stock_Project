@@ -7,6 +7,7 @@ import {
   XCircle,
   Trash2,
   Printer,
+  Pencil,
 } from "lucide-react";
 import { saleService } from "../../services/saleService";
 import { clientService } from "../../services/clientService";
@@ -23,6 +24,7 @@ export default function SalesPage() {
   const [articles, setArticles] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [selectedSale, setSelectedSale] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [saleToPrint, setSaleToPrint] = useState(null);
@@ -79,22 +81,46 @@ export default function SalesPage() {
     }
   };
 
-  const handleCreate = async (saleData, items) => {
+  const handleEdit = async (sale) => {
+    try {
+      const fullSale = await saleService.getById(sale.id);
+      setSelectedSale(fullSale);
+      setIsFormOpen(true);
+    } catch (err) {
+      console.error(err);
+      setError("Erreur lors du chargement des détails de la vente.");
+    }
+  };
+
+  const handleCreateNew = () => {
+    setSelectedSale(null);
+    setIsFormOpen(true);
+  };
+
+  const handleSave = async (saleData, items) => {
     setIsSubmitting(true);
     setError("");
     try {
-      await saleService.create(saleData, items);
-      await notificationsService.addNotification({
-        type: "info",
-        message: "Nouvelle vente créée avec le formulaire",
-      });
+      if (selectedSale) {
+        await saleService.update(selectedSale.id, saleData, items);
+        await notificationsService.addNotification({
+          type: "success",
+          message: "Vente modifiée avec succès",
+        });
+      } else {
+        await saleService.create(saleData, items);
+        await notificationsService.addNotification({
+          type: "info",
+          message: "Nouvelle vente créée avec le formulaire",
+        });
+      }
       await fetchData();
       setIsFormOpen(false);
     } catch (err) {
-      setError(err.message || "Erreur lors de la création.");
+      setError(err.message || "Erreur lors de l'enregistrement.");
       await notificationsService.addNotification({
         type: "error",
-        message: err.message || "Erreur lors de la création.",
+        message: err.message || "Erreur lors de l'enregistrement.",
       });
     } finally {
       setIsSubmitting(false);
@@ -210,6 +236,15 @@ export default function SalesPage() {
           <Printer className="w-4 h-4" />
         </button>
         {status === SALE_STATUS.EN_ATTENTE && (
+          <button
+            onClick={() => handleEdit(sale)}
+            className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
+            title="Modifier la vente"
+          >
+            <Pencil className="w-4 h-4" />
+          </button>
+        )}
+        {status === SALE_STATUS.EN_ATTENTE && (
           <>
             <button
               onClick={() => handleStatusChange(sale?.id, SALE_STATUS.VALIDEE)}
@@ -322,7 +357,7 @@ export default function SalesPage() {
           </p>
         </div>
         <button
-          onClick={() => setIsFormOpen(true)}
+          onClick={handleCreateNew}
           className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-xl font-medium hover:bg-primary/90 transition-colors"
         >
           <Plus className="w-5 h-5" />
@@ -419,10 +454,11 @@ export default function SalesPage() {
       <SaleForm
         isOpen={isFormOpen}
         onClose={() => !isSubmitting && setIsFormOpen(false)}
-        onSubmit={handleCreate}
+        onSubmit={handleSave}
         clients={clients}
         articles={articles}
         isLoading={isSubmitting}
+        sale={selectedSale}
       />
     </div>
   );

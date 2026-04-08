@@ -1,6 +1,6 @@
 // src/components/forms/SaleForm.jsx
 import { useState, useEffect } from "react";
-import { X, Plus, Trash2 } from "lucide-react";
+import { X, Plus, Trash2, Pencil, Check } from "lucide-react";
 import { stockService } from "../../services/stockService";
 
 export default function SaleForm({
@@ -10,17 +10,21 @@ export default function SaleForm({
   clients = [],
   articles = [],
   isLoading = false,
+  sale = null,
 }) {
   const [formData, setFormData] = useState({
     clientId: "",
     adresseLivraison: "",
     dateLivraison: new Date().toISOString().split("T")[0],
+    numero: "",
   });
 
   // Cart system
   const [items, setItems] = useState([]);
   const [currentArticleId, setCurrentArticleId] = useState("");
   const [currentQuantity, setCurrentQuantity] = useState("");
+  const [editingIndex, setEditingIndex] = useState(null);
+  const [editingQuantity, setEditingQuantity] = useState("");
 
   // Real-time stock dictionary: { articleId: availableStockQuantity }
   const [stockMap, setStockMap] = useState({});
@@ -50,18 +54,32 @@ export default function SaleForm({
   // Reset form when opened fresh
   useEffect(() => {
     if (isOpen) {
-      setFormData({
-        clientId: clients.length > 0 ? clients[0].id : "",
-        adresseLivraison: "",
-        dateLivraison: new Date().toISOString().split("T")[0],
-      });
-      setItems([]);
+      if (sale) {
+        setFormData({
+          clientId: sale.client?.id || "",
+          adresseLivraison: sale.adresse_livraison || "",
+          dateLivraison: sale.date_livraison ? sale.date_livraison.split('T')[0] : (sale.date_vente ? sale.date_vente.split('T')[0] : ""),
+          numero: sale.numero || "",
+        });
+        // Items are expected to be enriched by service
+        setItems(sale.items || []);
+      } else {
+        setFormData({
+          clientId: clients.length > 0 ? clients[0].id : "",
+          adresseLivraison: "",
+          dateLivraison: new Date().toISOString().split("T")[0],
+          numero: "",
+        });
+        setItems([]);
+      }
       setCurrentArticleId("");
       setCurrentQuantity("");
+      setEditingIndex(null);
+      setEditingQuantity("");
       setErrors({});
       setCartError("");
     }
-  }, [isOpen, clients]);
+  }, [isOpen, clients, sale]);
 
   // Auto-fill address when client changes
   useEffect(() => {
@@ -142,6 +160,46 @@ export default function SaleForm({
     const newItems = [...items];
     newItems.splice(index, 1);
     setItems(newItems);
+    if (editingIndex === index) {
+      setEditingIndex(null);
+      setEditingQuantity("");
+    }
+  };
+
+  const handleEditItem = (index) => {
+    setEditingIndex(index);
+    setEditingQuantity(items[index].quantite.toString());
+    setCartError("");
+  };
+
+  const handleSaveEdit = (index) => {
+    const qty = Number(editingQuantity);
+    if (isNaN(qty) || qty <= 0) {
+      setCartError("La quantité doit être supérieure à 0.");
+      return;
+    }
+
+    const item = items[index];
+    const availableStock = stockMap[Number(item.articleId)] ?? 0;
+
+    if (qty > availableStock) {
+      setCartError(`Stock insuffisant. Stock disponible: ${availableStock}`);
+      return;
+    }
+
+    const newItems = [...items];
+    newItems[index].quantite = qty;
+    newItems[index].total = qty * Number(newItems[index].prixUnitaire || 0);
+    setItems(newItems);
+    setEditingIndex(null);
+    setEditingQuantity("");
+    setCartError("");
+  };
+
+  const handleCancelEdit = () => {
+    setEditingIndex(null);
+    setEditingQuantity("");
+    setCartError("");
   };
 
   const validate = () => {
@@ -197,7 +255,7 @@ export default function SaleForm({
       <div className="relative bg-card rounded-xl border border-border shadow-xl w-full max-w-2xl mx-4 max-h-[90vh] flex flex-col">
           <div className="flex items-center justify-between p-4 border-b border-border shrink-0">
           <h2 className="text-lg font-semibold text-foreground">
-            Nouvelle Vente
+            {sale ? 'Modifier la Vente' : 'Nouvelle Vente'}
           </h2>
           <button
             onClick={onClose}
@@ -376,17 +434,61 @@ export default function SaleForm({
                         <td className="px-4 py-3">
                           {Number(item.prixUnitaire || 0).toFixed(2)} MAD
                         </td>
-                        <td className="px-4 py-3">{item.quantite}</td>
+                        <td className="px-4 py-3">
+                          {editingIndex === index ? (
+                            <input
+                              type="number"
+                              step="any"
+                              value={editingQuantity}
+                              onChange={(e) => setEditingQuantity(e.target.value)}
+                              className="w-20 px-2 py-1 bg-background border border-primary rounded text-sm outline-none focus:ring-1 focus:ring-primary"
+                              autoFocus
+                            />
+                          ) : (
+                            item.quantite
+                          )}
+                        </td>
                         <td className="px-4 py-3 font-medium">
                           {Number(item.total || 0).toFixed(2)} MAD
                         </td>
                         <td className="px-4 py-3 text-right">
-                          <button
-                            onClick={() => handleRemoveItem(index)}
-                            className="text-red-500 hover:bg-red-50 p-1 rounded transition-colors"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          <div className="flex justify-end gap-1">
+                            {editingIndex === index ? (
+                              <>
+                                <button
+                                  onClick={() => handleSaveEdit(index)}
+                                  className="text-green-600 hover:bg-green-50 p-1 rounded transition-colors"
+                                  title="Enregistrer"
+                                >
+                                  <Check className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={handleCancelEdit}
+                                  className="text-slate-400 hover:bg-slate-50 p-1 rounded transition-colors"
+                                  title="Annuler"
+                                >
+                                  <X className="w-4 h-4" />
+                                </button>
+                              </>
+                            ) : (
+                              <>
+                                <button
+                                  onClick={() => handleEditItem(index)}
+                                  className="text-blue-500 hover:bg-blue-50 p-1 rounded transition-colors"
+                                  title="Modifier la quantité"
+                                >
+                                  <Pencil className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() => handleRemoveItem(index)}
+                                  className="text-red-500 hover:bg-red-50 p-1 rounded transition-colors"
+                                  title="Supprimer"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))}
