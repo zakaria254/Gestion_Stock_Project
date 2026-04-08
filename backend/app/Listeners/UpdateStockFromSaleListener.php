@@ -28,6 +28,7 @@ class UpdateStockFromSaleListener
                 'stock_id' => $stock->id,
                 'type' => 'out',
                 'quantite' => $quantite,
+                'is_generated' => true,
                 'motif' => 'Vente',
             ]);
         }

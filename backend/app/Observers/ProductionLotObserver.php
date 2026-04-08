@@ -21,6 +21,7 @@ class ProductionLotObserver
                     'stock_id' => $stock->id,
                     'type' => 'in',
                     'quantite' => $productionLot->quantite,
+                    'is_generated' => true,
                     'motif' => 'Production',
                 ]);
             }
@@ -44,6 +45,7 @@ class ProductionLotObserver
                     'stock_id' => $stock->id,
                     'type' => 'in',
                     'quantite' => $new_quantite,
+                    'is_generated' => true,
                     'motif' => 'Production',
                 ]);
             }
