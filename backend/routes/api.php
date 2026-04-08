@@ -25,6 +25,7 @@ Route::middleware(['auth:sanctum', 'can:admin_only'])->group(function () {
     Route::apiResource('users', UserController::class);
     Route::apiResource('suppliers', SupplierController::class);
     Route::apiResource('production_lots', ProductionLotController::class);   
+    Route::get('/production_lots/completed/{production_lot}', [ProductionLotController::class, 'lot_completed']);   
 });
 
 // routes admin and ventes can access

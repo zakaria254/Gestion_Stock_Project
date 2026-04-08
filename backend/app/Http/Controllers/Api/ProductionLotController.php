@@ -59,6 +59,23 @@ class ProductionLotController extends Controller
         }
     }
 
+    public function lot_completed(ProductionLot $production_lot) 
+    {
+        if ($production_lot->status !== 'COMPLETED') {
+            $production_lot->update([
+                'status' => 'COMPLETED',    
+            ]);
+
+            return response()->json([
+                'message' => 'the lot status is set to COMPLETED'
+            ], 200);
+        } else {
+            return response()->json([
+                'message' => 'this lot is already COMPLETED',
+            ], 403);
+        }
+    }
+
     /**
      * Remove the specified resource from storage.
      */
