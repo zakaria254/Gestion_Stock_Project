@@ -43,7 +43,6 @@ export const STATUS_LABELS = {
 
 // Labels pour les statuts de production
 export const PRODUCTION_STATUS_LABELS = {
-  AVAILABLE: 'Disponible',
   IN_PROGRESS: 'En cours',
   COMPLETED: 'Terminé',
 }

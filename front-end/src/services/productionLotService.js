@@ -50,5 +50,10 @@ export const productionLotService = {
   delete: async (id) => {
     const response = await api.delete(`/production_lots/${id}`);
     return response.data?.data || response.data || [];
+  },
+
+  markAsCompleted: async (id) => {
+    const response = await api.get(`/production_lots/completed/${id}`);
+    return response.data;
   }
 };

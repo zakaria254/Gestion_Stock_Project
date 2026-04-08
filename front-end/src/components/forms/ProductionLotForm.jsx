@@ -3,12 +3,6 @@ import { useState, useEffect, useCallback } from 'react'
 import { X, Loader2, RefreshCw } from 'lucide-react'
 import { articleService } from '../../services/articleService'
 
-const STATUTS = [
-  { value: 'AVAILABLE', label: 'Disponible' },
-  { value: 'IN_PROGRESS', label: 'En Cours' },
-  { value: 'COMPLETED', label: 'Terminé' },
-]
-
 // Generate a lot number: LOT-YYYYMMDD-XXXX (18 chars, fits 10-20 rule)
 function generateLotNumber() {
   const now = new Date()
@@ -105,7 +99,6 @@ export default function ProductionLotForm({ isOpen, onClose, onSubmit, productio
     }
     
     if (!formData.date_production) newErrors.date_production = 'La date est requise'
-    if (!formData.status) newErrors.status = 'Le statut est requis'
     
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -246,20 +239,6 @@ export default function ProductionLotForm({ isOpen, onClose, onSubmit, productio
             {errors.date_production && <p className="mt-1 text-xs text-destructive">{errors.date_production}</p>}
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1">Statut</label>
-            <select
-              name="status"
-              value={formData.status}
-              onChange={handleChange}
-              className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-            >
-              {STATUTS.map(statut => (
-                <option key={statut.value} value={statut.value}>{statut.label}</option>
-              ))}
-            </select>
-            {errors.status && <p className="mt-1 text-xs text-destructive">{errors.status}</p>}
-          </div>
 
           <div>
             <label className="block text-sm font-medium text-foreground mb-1">Certificat d'Abattage (Optionnel)</label>

@@ -26,7 +26,7 @@ class StoreUpdateProductionLotRequest extends FormRequest
             'numero_lot' => 'required|string|min:10|max:20|unique:production_lots,numero_lot,' . $this->production_lot?->id,
             'quantite' => 'required|decimal:0,2|gt:0',
             'article_id' => 'required|exists:articles,id',
-            'status' => 'required|string|in:AVAILABLE,IN_PROGRESS,COMPLETED',
+            // 'status' => 'required|string|in:AVAILABLE,IN_PROGRESS,COMPLETED',
             'date_production' => 'nullable|date',
             'certificat_abattage' => 'nullable|string'
         ];

@@ -1,6 +1,6 @@
 // src/pages/production/ProductionLotsPage.jsx
 import { useState, useEffect } from 'react'
-import { Plus, Pencil, Trash2 } from 'lucide-react'
+import { Plus, Pencil, Trash2, CheckCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import DataTable from '../../components/tables/DataTable'
 import ProductionLotForm from '../../components/forms/ProductionLotForm'
@@ -8,13 +8,11 @@ import { productionLotService } from '../../services/productionLotService'
 import { articleService } from '../../services/articleService'
 
 const STATUS_COLORS = {
-  'AVAILABLE': 'bg-blue-100 text-blue-800',
   'IN_PROGRESS': 'bg-orange-100 text-orange-800',
   'COMPLETED': 'bg-green-100 text-green-800',
 }
 
 const STATUS_LABELS = {
-  'AVAILABLE': 'Disponible',
   'IN_PROGRESS': 'En Cours',
   'COMPLETED': 'Terminé',
 }
@@ -66,6 +64,21 @@ export default function ProductionLotsPage() {
         toast.success(`Lot ${lot.numero_lot} supprimé avec succès`)
       } catch (error) {
         toast.error('Erreur lors de la suppression du lot')
+      }
+    }
+  }
+
+  const handleComplete = async (lot) => {
+    if (window.confirm(`Voulez-vous marquer le lot ${lot.numero_lot} comme terminé ? Cette action est irréversible.`)) {
+      try {
+        await productionLotService.markAsCompleted(lot.id)
+        setProductionLots(prev => prev.map(p => 
+          p.id === lot.id ? { ...p, status: 'COMPLETED' } : p
+        ))
+        toast.success(`Lot ${lot.numero_lot} marqué comme terminé`)
+      } catch (error) {
+        const msg = error.response?.data?.message || 'Erreur lors de la mise à jour du statut'
+        toast.error(msg)
       }
     }
   }
@@ -142,24 +155,39 @@ export default function ProductionLotsPage() {
     },
   ]
 
-  const renderActions = (lot) => (
-    <>
-      <button
-        onClick={() => handleEdit(lot)}
-        className="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors"
-        title="Modifier"
-      >
-        <Pencil className="h-4 w-4" />
-      </button>
-      <button
-        onClick={() => handleDelete(lot)}
-        className="p-1.5 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
-        title="Supprimer"
-      >
-        <Trash2 className="h-4 w-4" />
-      </button>
-    </>
-  )
+  const renderActions = (lot) => {
+    const isCompleted = lot.status === 'COMPLETED'
+    
+    return (
+      <div className="flex items-center gap-1">
+        {!isCompleted && (
+          <>
+            <button
+              onClick={() => handleEdit(lot)}
+              className="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors"
+              title="Modifier"
+            >
+              <Pencil className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => handleComplete(lot)}
+              className="p-1.5 rounded-lg text-green-600 hover:bg-green-50 transition-colors"
+              title="Marquer comme terminé"
+            >
+              <CheckCircle className="h-4 w-4" />
+            </button>
+          </>
+        )}
+        <button
+          onClick={() => handleDelete(lot)}
+          className="p-1.5 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
+          title="Supprimer"
+        >
+          <Trash2 className="h-4 w-4" />
+        </button>
+      </div>
+    )
+  }
 
   if (isLoading) {
     return (
