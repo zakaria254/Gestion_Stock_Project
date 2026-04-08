@@ -46,11 +46,17 @@ class StockMovementController extends Controller
      */
     public function update(StoreUpdateStockMovementRequest $request, StockMovement $movement)
     {
-        $validated = $request->validated();
-        $movement->update($validated);
-        $movement->load('stock.article');
+        if (!$movement->is_generated) {            
+            $validated = $request->validated();
+            $movement->update($validated);
+            $movement->load('stock.article');
+    
+            return new StockMovementResource($movement);
+        }
 
-        return new StockMovementResource($movement);
+        return response()->json([
+            'message' => 'action is denied !',
+        ], 403);
     }
 
     /**

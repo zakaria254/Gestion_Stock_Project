@@ -20,6 +20,7 @@ class StockMovementResource extends JsonResource
             'type' => $this->type,
             'quantite' => $this->quantite,
             'motif' => $this->motif,
+            'is_generated' => $this->is_generated,
             'date' => $this->created_at->format('Y-m-d H:i:s'),
         ];
     }

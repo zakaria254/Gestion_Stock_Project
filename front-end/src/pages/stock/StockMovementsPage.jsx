@@ -166,14 +166,18 @@ export default function StockMovementsPage() {
   ]
 
   const renderActions = (m) => (
-    <>
-      <button
-        onClick={() => handleEdit(m)}
-        className="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors"
-        title="Modifier"
-      >
-        <Pencil className="h-4 w-4" />
-      </button>
+    <div className="flex items-center gap-2">
+      {!m.is_generated ? (
+        <button
+          onClick={() => handleEdit(m)}
+          className="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors"
+          title="Modifier"
+        >
+          <Pencil className="h-4 w-4" />
+        </button>
+      ) : (
+        <span className="text-xs text-muted-foreground italic px-1">Automatique</span>
+      )}
       <button
         onClick={() => handleDelete(m)}
         className="p-1.5 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
@@ -181,7 +185,7 @@ export default function StockMovementsPage() {
       >
         <Trash2 className="h-4 w-4" />
       </button>
-    </>
+    </div>
   )
 
   if (isLoading) {

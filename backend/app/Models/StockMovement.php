@@ -14,7 +14,12 @@ class StockMovement extends Model
         'stock_id',
         'type',
         'quantite',
-        'motif'
+        'motif',
+        'is_generated'
+    ];
+
+    protected $casts = [
+        'is_generated' => 'boolean',
     ];
 
     public function stock () {
