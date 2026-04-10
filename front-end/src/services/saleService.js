@@ -38,15 +38,19 @@ export const saleService = {
 
     // Map articles with pivot to items for UI consumption
     const items =
-      sale.articles?.map((article) => ({
-        articleId: article.id,
-        articleNom: article.nom,
-        quantite: article.pivot?.quantite || 0,
-        prixUnitaire: article.pivot?.prix_unitaire || 0,
-        total:
-          article.pivot?.total ||
-          (article.pivot?.quantite || 0) * (article.pivot?.prix_unitaire || 0),
-      })) || []
+      sale.articles?.map((article) => {
+        const quantite = Number(article.pivot?.quantite || 0);
+        const prixUnitaire = Number(article.pivot?.prix_unitaire || 0);
+        const total = article.pivot?.total ? Number(article.pivot.total) : (quantite * prixUnitaire);
+        
+        return {
+          articleId: article.id,
+          articleNom: article.nom,
+          quantite,
+          prixUnitaire,
+          total,
+        };
+      }) || []
 
     return {
       ...sale,

@@ -49,6 +49,7 @@ class SaleController extends Controller
             ]);
 
             
+            
             foreach ($validated['articles'] as $article) {
                 $sale->articles()->attach($article['id'], [
                     'quantite' => $article['quantite'],
@@ -81,11 +82,37 @@ class SaleController extends Controller
     public function update(StoreUpdateSaleRequest $request, Sale $sale)
     {
         if ($sale->status !== 'Validee') {
-            $validated = $request->validated();
-            $sale->update($validated);
-            $sale->load(['client', 'articles', 'user']);
+            return DB::transaction(function () use ($request, $sale) {
+                $validated = $request->validated();
 
-            return new SaleResource($sale);
+                $montant_total = collect($validated['articles'])->sum(function ($article) {
+                    return $article['prix_unitaire'] * $article['quantite'];
+                });
+                
+                $sale->update([
+                    'numero' => $validated['numero'],
+                    'client_id' => $validated['client_id'],
+                    'user_id' => Auth::id(),
+                    'montant_total' => $montant_total,
+                    'adresse_livraison' => $validated['adresse_livraison'],
+                    'date_livraison' => $validated['date_livraison'],
+                    'status' => $validated['status'] ?? 'En attente',
+                    'date_vente' => $validated['date_vente']
+                ]);
+
+                foreach ($validated['articles'] as $article) {
+                    $sale->articles()->syncWithoutDetaching([
+                        $article['id'] => [
+                            'quantite' => $article['quantite'],
+                            'prix_unitaire' => $article['prix_unitaire'],
+                            'total' => $article['quantite'] * $article['prix_unitaire'],
+                        ]
+                    ]);
+                }
+
+                $sale->load(['client', 'articles', 'user']);
+                return new SaleResource($sale);
+            });
         } 
 
         return response()->json([

@@ -132,9 +132,11 @@ export default function SaleForm({
     if (existingItemIndex >= 0) {
       // Update existing row
       const newItems = [...items];
-      newItems[existingItemIndex].quantite += qty;
-      const unitPrice = Number(newItems[existingItemIndex].prixUnitaire || 0);
-      newItems[existingItemIndex].total = newItems[existingItemIndex].quantite * unitPrice;
+      const updatedItem = { ...newItems[existingItemIndex] };
+      updatedItem.quantite = Number(updatedItem.quantite) + qty;
+      const unitPrice = Number(updatedItem.prixUnitaire || 0);
+      updatedItem.total = updatedItem.quantite * unitPrice;
+      newItems[existingItemIndex] = updatedItem;
       setItems(newItems);
     } else {
       // Add new row
@@ -188,8 +190,10 @@ export default function SaleForm({
     }
 
     const newItems = [...items];
-    newItems[index].quantite = qty;
-    newItems[index].total = qty * Number(newItems[index].prixUnitaire || 0);
+    const updatedItem = { ...newItems[index] };
+    updatedItem.quantite = qty;
+    updatedItem.total = qty * Number(updatedItem.prixUnitaire || 0);
+    newItems[index] = updatedItem;
     setItems(newItems);
     setEditingIndex(null);
     setEditingQuantity("");
@@ -219,7 +223,7 @@ export default function SaleForm({
   const handleSubmit = (e) => {
     e.preventDefault();
     if (validate()) {
-      const grandTotal = items.reduce((sum, item) => sum + item.total, 0);
+      const grandTotal = items.reduce((sum, item) => sum + Number(item.total || 0), 0);
       onSubmit(
         {
           ...formData,
@@ -241,7 +245,7 @@ export default function SaleForm({
 
   if (!isOpen) return null;
 
-  const grandTotal = items.reduce((sum, item) => sum + item.total, 0);
+  const grandTotal = items.reduce((sum, item) => sum + Number(item.total || 0), 0);
 
   // Current article selected stock display
   const currentSelectedStock = currentArticleId

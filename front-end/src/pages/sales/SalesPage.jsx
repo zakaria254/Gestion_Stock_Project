@@ -297,15 +297,17 @@ export default function SalesPage() {
     status: normalizeStatus(sale?.status),
     dateCreation: sale?.created_at || sale?.date_vente || sale?.dateCreation || sale?.date || "",
     items:
-      sale?.articles?.map((a) => ({
-        articleId: a.id,
-        articleNom: a.nom,
-        quantite: a.pivot?.quantite || 0,
-        prixUnitaire: a.pivot?.prix_unitaire || 0,
-        total:
-          a.pivot?.total ||
-          (a.pivot?.quantite || 0) * (a.pivot?.prix_unitaire || 0),
-      })) || sale?.items,
+      sale?.articles?.map((a) => {
+        const q = Number(a.pivot?.quantite || 0);
+        const p = Number(a.pivot?.prix_unitaire || 0);
+        return {
+          articleId: a.id,
+          articleNom: a.nom,
+          quantite: q,
+          prixUnitaire: p,
+          total: a.pivot?.total ? Number(a.pivot.total) : (q * p),
+        };
+      }) || sale?.items,
   }));
 
   const uniqueClients = [
