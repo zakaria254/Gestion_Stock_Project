@@ -42,4 +42,9 @@ class Sale extends Model
                     ->withPivot(['quantite', 'prix_unitaire', 'total'])
                     ->withTimestamps();
     }
+
+    public function facture ()
+    {
+        return $this->hasOne(Facture::class);
+    }
 }
