@@ -139,6 +139,21 @@ class SaleController extends Controller
         ], 403);
     }
 
+    public function annuler_sale (Sale $sale)
+    {
+        if ($sale->status === 'En attente') {
+            $sale->update([
+                'statue' => 'Annulee',
+            ]);
+
+            return new SaleResource($sale->load(['articles', 'client', 'user']));
+        }
+
+        return response()->json([
+            'message' => 'this sale can not be canceled ',
+        ], 403);
+    }
+
     /**
      * Remove the specified resource from storage.
      */
