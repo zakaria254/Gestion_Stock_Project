@@ -143,7 +143,7 @@ class SaleController extends Controller
     {
         if ($sale->status === 'En attente') {
             $sale->update([
-                'statue' => 'Annulee',
+                'status' => 'Annulee',
             ]);
 
             return new SaleResource($sale->load(['articles', 'client', 'user']));

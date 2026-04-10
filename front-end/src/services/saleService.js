@@ -105,7 +105,11 @@ export const saleService = {
       const response = await api.get(`/sales/validate/${id}`)
       return response.data?.data || response.data
     }
-    throw new Error("L'API ne supporte pas encore l'annulation d'une vente.")
+    if (newStatus === SALE_STATUS.ANNULEE) {
+      const response = await api.get(`/sales/annuler/${id}`)
+      return response.data?.data || response.data
+    }
+    throw new Error(`Le statut ${newStatus} n'est pas géré par l'API.`)
   },
 
   async delete(id) {
