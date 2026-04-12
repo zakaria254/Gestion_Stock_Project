@@ -1,3 +1,4 @@
 # Ignore steps and schema files
 steps.txt
 DATABASE_SCHEMA.pdf
+SaaS_Transformation_Guide.md

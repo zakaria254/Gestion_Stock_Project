@@ -16,5 +16,3 @@ node_modules/
 .next/
 .DS_Store
 
-DATABASE_SCHEMA.pdf
-steps.txt
