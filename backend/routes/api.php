@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\ArticleController;
 use App\Http\Controllers\Api\ClientController;
+use App\Http\Controllers\Api\FactureController;
 use App\Http\Controllers\Api\ProductionLotController;
 use App\Http\Controllers\Api\SaleController;
 use App\Http\Controllers\Api\StockController;
@@ -34,6 +35,7 @@ Route::middleware(['auth:sanctum', 'can:ventes_admin_access'])->group(function (
     Route::apiResource('sales', SaleController::class)->except(['show']);
     Route::get('/sales/validate/{sale}', [SaleController::class, 'validate_sale']);
     Route::get('/sales/annuler/{sale}', [SaleController::class, 'annuler_sale']);
+    Route::get('/factures', [FactureController::class, 'index']);
 });
 
 // routes admin and stock can access 
