@@ -634,7 +634,6 @@ export const salesService = {
 }
 
 // ===== FACTURES =====
-let invoicesData = [...invoices]
 
 export const invoicesService = realInvoicesService;
 
@@ -725,7 +724,7 @@ export const dashboardService = {
       totalClients: clientsData.length,
       totalFournisseurs: suppliersData.length,
       totalArticles: articlesData.length,
-      facturesImpayees: invoicesData.filter(inv => inv.status === INVOICE_STATUS.UNPAID).length,
+      facturesImpayees: 0,
       topArticles,
       repartitionStock,
       evolutionVentes,
