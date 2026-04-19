@@ -19,6 +19,21 @@ class FactureController extends Controller
         return FactureResource::collection($factures);
     }
 
+    public function facturePaid (Facture $facture)
+    {
+        if ($facture->status === 'PENDING') {
+            $facture->update([
+                'status' => 'PAID',
+            ]);
+             
+            return new FactureResource($facture);
+        }
+
+        return response()->json([
+            'message' => 'this facture can not be paid'
+        ], 403);
+    }
+
     /**
      * Store a newly created resource in storage.
      */
