@@ -25,8 +25,8 @@ class FactureResource extends JsonResource
             'articles' => ArticleResource::collection($this->sale->articles),
             'status' => $this->status,
             'montant_total' => $this->montant_total,
-            'date_payment' => $this->date_payment ? $this->date_payment->format('Y-m-d H:s:i') : null,
-            'created_at' => $this->created_at->format('Y-m-d H:s:i')
+            'date_payment' => $this->date_payment ? $this->date_payment->format('Y-m-d H:i:s') : null,
+            'created_at' => $this->created_at->format('Y-m-d H:i:s')
         ];
     }
 }

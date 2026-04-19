@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\FactureResource;
+use App\Models\Facture;
 use Illuminate\Http\Request;
 
 class FactureController extends Controller
@@ -12,7 +14,9 @@ class FactureController extends Controller
      */
     public function index()
     {
-        // 
+        $factures = Facture::with('sale', 'sale.client', 'sale.articles')->latest()->paginate(12);
+
+        return FactureResource::collection($factures);
     }
 
     /**
