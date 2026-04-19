@@ -12,7 +12,7 @@ class FactureController extends Controller
      */
     public function index()
     {
-        //
+        // 
     }
 
     /**
