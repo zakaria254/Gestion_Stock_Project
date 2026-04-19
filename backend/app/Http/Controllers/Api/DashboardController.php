@@ -17,7 +17,7 @@ class DashboardController extends Controller
         $salesValidee = Sale::where('status', 'Validee')->sum('montant_total');
 
         $stockValue = 0;
-        Stock::with('article:prix')->chunk(100, function ($stocks) use (&$stockValue) {
+        Stock::with('article:id,prix')->chunk(100, function ($stocks) use (&$stockValue) {
             foreach ($stocks as $stock) {
                 $stockValue += ($stock->article->prix * $stock->stock_actuel);
             }
