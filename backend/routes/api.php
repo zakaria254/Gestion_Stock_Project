@@ -37,6 +37,7 @@ Route::middleware(['auth:sanctum', 'can:ventes_admin_access'])->group(function (
     Route::get('/sales/annuler/{sale}', [SaleController::class, 'annuler_sale']);
     Route::get('/factures', [FactureController::class, 'index']);
     Route::get('/factures/{facture}/paid', [FactureController::class, 'facturePaid']);
+    Route::get('/factures/{facture}/unpaid', [FactureController::class, 'factureUnpaid']);
 });
 
 // routes admin and stock can access 

@@ -34,6 +34,21 @@ class FactureController extends Controller
         ], 403);
     }
 
+    public function factureUnpaid (Facture $facture)
+    {
+        if ($facture->status === 'PENDING') {
+            $facture->update([
+                'status' => 'UNPAID',
+            ]);
+             
+            return new FactureResource($facture);
+        }
+
+        return response()->json([
+            'message' => 'this facture can not be unpaid'
+        ], 403);
+    }
+
     /**
      * Store a newly created resource in storage.
      */
