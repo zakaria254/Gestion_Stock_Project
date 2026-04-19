@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\ArticleController;
 use App\Http\Controllers\Api\ClientController;
+use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\FactureController;
 use App\Http\Controllers\Api\ProductionLotController;
 use App\Http\Controllers\Api\SaleController;
@@ -26,7 +27,8 @@ Route::middleware(['auth:sanctum', 'can:admin_only'])->group(function () {
     Route::apiResource('users', UserController::class);
     Route::apiResource('suppliers', SupplierController::class);
     Route::apiResource('production_lots', ProductionLotController::class);   
-    Route::get('/production_lots/completed/{production_lot}', [ProductionLotController::class, 'lot_completed']);   
+    Route::get('/production_lots/completed/{production_lot}', [ProductionLotController::class, 'lot_completed']); 
+    Route::get('/dashboard', [DashboardController::class, 'statistic']);  
 });
 
 // routes admin and ventes can access

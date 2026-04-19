@@ -14,8 +14,8 @@ export default function InvoicesPage() {
       setIsLoading(true)
       try {
         const data = await invoicesService.getAll()
-        const sorted = [...data].sort((a, b) => new Date(b.dateEmission) - new Date(a.dateEmission))
-        setInvoices(sorted)
+        const items = Array.isArray(data) ? data : (data?.data || [])
+        setInvoices(items)
       } catch (error) {
         console.error('Erreur:', error)
       } finally {
@@ -24,6 +24,21 @@ export default function InvoicesPage() {
     }
     fetchInvoices()
   }, [])
+
+  const handleStatusChange = async (id, status) => {
+    try {
+      if (status === 'PAID') {
+        await invoicesService.markAsPaid(id)
+      } else {
+        await invoicesService.markAsUnpaid(id)
+      }
+      // Refresh data
+      const data = await invoicesService.getAll()
+      setInvoices(Array.isArray(data) ? data : (data?.data || []))
+    } catch (error) {
+      console.error('Erreur changement statut:', error)
+    }
+  }
 
   const handlePrint = async (invoice) => {
     try {
@@ -163,20 +178,39 @@ export default function InvoicesPage() {
 
   const columns = [
     { key: 'numero', label: 'RÉFÉRENCE', render: (item) => <span className="font-mono font-bold text-slate-900">{item.numero}</span> },
-    { key: 'clientNom', label: 'CLIENT', render: (item) => <span className="font-semibold text-slate-700">{item.clientNom}</span> },
-    { key: 'dateEmission', label: "DATE D'ÉMISSION", render: (item) => <span className="text-slate-500 font-medium">{new Date(item.dateEmission).toLocaleDateString("fr-FR")}</span> },
-    { key: 'montantTotal', label: 'MONTANT TTC', render: (item) => <span className="font-black text-slate-900">{Number(item.montantTotal || 0).toFixed(2)} MAD</span> },
+    { key: 'clientNom', label: 'CLIENT', render: (item) => <span className="font-semibold text-slate-700">{item.client?.nom || item.clientNom || "-"}</span> },
+    { key: 'created_at', label: "DATE D'ÉMISSION", render: (item) => <span className="text-slate-500 font-medium">{item.created_at ? new Date(item.created_at).toLocaleDateString("fr-FR") : "-"}</span> },
+    { key: 'montant_total', label: 'MONTANT TTC', render: (item) => <span className="font-black text-slate-900">{Number(item.montant_total || 0).toFixed(2)} MAD</span> },
     { key: 'status', label: 'STATUT', render: (item) => getStatusBadge(item.status) },
   ]
 
   const renderActions = (invoice) => (
-    <button
-      onClick={() => handlePrint(invoice)}
-      className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-primary transition-all shadow-md active:scale-95"
-    >
-      <Printer className="w-3.5 h-3.5" />
-      IMPRIMER
-    </button>
+    <div className="flex items-center gap-2">
+      <button
+        onClick={() => handlePrint(invoice)}
+        className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg text-xs font-bold hover:bg-slate-200 transition-all"
+        title="Imprimer"
+      >
+        <Printer className="w-3.5 h-3.5" />
+      </button>
+      
+      {invoice.status === 'PENDING' && (
+        <>
+          <button
+            onClick={() => handleStatusChange(invoice.id, 'PAID')}
+            className="px-3 py-1.5 bg-emerald-500 text-white rounded-lg text-xs font-bold hover:bg-emerald-600 transition-all shadow-sm"
+          >
+            PAYER
+          </button>
+          <button
+            onClick={() => handleStatusChange(invoice.id, 'UNPAID')}
+            className="px-3 py-1.5 bg-rose-500 text-white rounded-lg text-xs font-bold hover:bg-rose-600 transition-all shadow-sm"
+          >
+            NON PAYÉ
+          </button>
+        </>
+      )}
+    </div>
   )
 
   return (

@@ -44,7 +44,6 @@ import {
   stock,
   sales,
   saleItems,
-  invoices,
   salesByMonth,
   stockByArticle,
   invoiceStatusData,
@@ -53,6 +52,8 @@ import {
   SALE_STATUS,
   stockMovements,
 } from '../data/mockData'
+
+import { invoicesService as realInvoicesService } from './invoicesService'
 
 // Simule un délai réseau
 const delay = (ms = 300) => new Promise(resolve => setTimeout(resolve, ms))
@@ -633,142 +634,30 @@ export const salesService = {
 }
 
 // ===== FACTURES =====
-let invoicesData = [...invoices]
 
-export const invoicesService = {
-  async getAll() {
-    await delay()
-    return [...invoicesData]
-  },
-
-  async getById(id) {
-    await delay()
-    return invoicesData.find(i => i.id === id) || null
-  },
-
-  async create(invoiceData) {
-    await delay()
-    const client = clientsData.find(c => c.id === invoiceData.clientId)
-    const newInvoice = {
-      ...invoiceData,
-      montantTotal: Number(invoiceData.montantTotal || 0),
-      id: generateId(),
-      numero: `FAC-${new Date().getFullYear()}-${String(invoicesData.length + 1).padStart(3, '0')}`,
-      clientNom: client?.nom || '',
-      dateEmission: new Date().toISOString().split('T')[0],
-    }
-    invoicesData.push(newInvoice)
-    return newInvoice
-  },
-
-  async updateStatus(id, status) {
-    await delay()
-    const index = invoicesData.findIndex(i => i.id === id)
-    if (index !== -1) {
-      invoicesData[index].status = status
-      return invoicesData[index]
-    }
-    return null
-  },
-
-  async delete(id) {
-    await delay()
-    invoicesData = invoicesData.filter(i => i.id !== id)
-    return { success: true }
-  },
-}
+export const invoicesService = realInvoicesService;
 
 // ===== DASHBOARD =====
 export const dashboardService = {
   async getStats() {
-    await delay()
-
-    // Ventes VALIDEE ce mois
-    const now = new Date()
-    const ventesValideesMois = salesData
-      .filter(s => {
-        if (s.status !== SALE_STATUS.VALIDEE) return false
-        const d = new Date(s.dateCreation)
-        return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()
-      })
-      .reduce((sum, s) => sum + Number(s.total || 0), 0)
-
-    // Valeur du stock: somme(prix * stockActuel) par article
-    const stockData = await stockService.getStock()
-    const valeurStock = stockData.reduce((sum, s) => {
-      const article = articlesData.find(a => a.id === s.articleId)
-      return sum + (article ? article.prix * Math.max(0, s.stockActuel) : 0)
-    }, 0)
-
-    // Articles en alerte (stock <= seuil minimum)
-    const alertesStock = stockData.filter(s => {
-      const article = articlesData.find(a => a.id === s.articleId)
-      return s.stockActuel <= (article?.seuilMinimum || 0)
-    }).length
-
-    // Articles en stock négatif
-    const stockNegatif = stockData.filter(s => s.stockActuel < 0).length
-
-    // Commandes EN_ATTENTE
-    const commandesEnAttente = salesData.filter(s => s.status === SALE_STATUS.EN_ATTENTE).length
-
-    // Top 5 articles les plus vendus (par total de sorties de type Vente)
-    const salesByArticle = {}
-    stockMovementsData
-      .filter(m => m.type === 'SORTIE' && m.motif === 'Vente')
-      .forEach(m => {
-        const key = Number(m.articleId)
-        salesByArticle[key] = (salesByArticle[key] || 0) + Number(m.quantite)
-      })
-    const topArticles = Object.entries(salesByArticle)
-      .map(([id, quantite]) => {
-        const article = articlesData.find(a => a.id === Number(id))
-        return { nom: article?.nom || `#${id}`, quantite }
-      })
-      .sort((a, b) => b.quantite - a.quantite)
-      .slice(0, 5)
-
-    // Répartition du stock par catégorie (dynamique)
-    const byCategorie = {}
-    stockData.forEach(s => {
-      const article = articlesData.find(a => a.id === s.articleId)
-      const cat = article?.categorie || 'Autre'
-      byCategorie[cat] = (byCategorie[cat] || 0) + Math.max(0, s.stockActuel)
-    })
-    const repartitionStock = Object.entries(byCategorie).map(([categorie, quantite]) => ({
-      categorie,
-      quantite,
-    }))
-
-    // Evolution des ventes des 7 derniers jours
-    const evolutionVentes = []
-    for (let i = 6; i >= 0; i--) {
-      const day = new Date(now)
-      day.setDate(now.getDate() - i)
-      const label = day.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric' })
-      const total = salesData
-        .filter(s => {
-          if (s.status !== SALE_STATUS.VALIDEE) return false
-          const d = new Date(s.dateCreation)
-          return d.toDateString() === day.toDateString()
-        })
-        .reduce((sum, s) => sum + Number(s.total || 0), 0)
-      evolutionVentes.push({ jour: label, ventes: total })
-    }
-
+    const response = await api.get('/dashboard')
+    const data = response.data?.data || response.data
+    
+    // Fallback for fields not yet in backend
     return {
-      ventesValideesMois,
-      valeurStock,
-      alertesStock,
-      stockNegatif,
-      commandesEnAttente,
-      totalClients: clientsData.length,
-      totalFournisseurs: suppliersData.length,
-      totalArticles: articlesData.length,
-      facturesImpayees: invoicesData.filter(inv => inv.status === INVOICE_STATUS.UNPAID).length,
-      topArticles,
-      repartitionStock,
-      evolutionVentes,
+      ...data,
+      ventesValideesMois: data.salesValidee || 0,
+      valeurStock: data.stockValue || 0,
+      alertesStock: data.stocksAlerts || 0,
+      commandesEnAttente: data.pendingSales || 0,
+      totalClients: data.clientsCount || 0,
+      totalArticles: data.articlesCount || 0,
+      facturesImpayees: data.unpaidFactures || 0,
+      totalFournisseurs: data.supplierCount || 0,
+      stockNegatif: 0, // Not yet in backend
+      evolutionVentes: data.evolutionVentes || [],
+      repartitionStock: data.repartitionStock || [],
+      topArticles: data.topArticles || [],
     }
   },
 
