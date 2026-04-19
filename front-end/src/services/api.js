@@ -655,9 +655,9 @@ export const dashboardService = {
       facturesImpayees: data.unpaidFactures || 0,
       totalFournisseurs: data.supplierCount || 0,
       stockNegatif: 0, // Not yet in backend
-      evolutionVentes: [], // Not yet in backend
-      repartitionStock: [], // Not yet in backend
-      topArticles: [], // Not yet in backend
+      evolutionVentes: data.evolutionVentes || [],
+      repartitionStock: data.repartitionStock || [],
+      topArticles: data.topArticles || [],
     }
   },
 

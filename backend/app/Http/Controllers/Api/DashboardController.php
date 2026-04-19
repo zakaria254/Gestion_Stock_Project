@@ -33,6 +33,36 @@ class DashboardController extends Controller
 
         $unpaidFactures = Facture::where('status', 'UNPAID')->count();
 
+        // 1. Évolution des Ventes (7 derniers jours)
+        $evolutionVentes = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $date = now()->subDays($i)->format('Y-m-d');
+            $total = Sale::where('status', 'Validee')
+                         ->whereDate('created_at', $date)
+                         ->sum('montant_total');
+            
+            $evolutionVentes[] = [
+                'jour' => now()->subDays($i)->format('d/m'),
+                'ventes' => (float)$total
+            ];
+        }
+
+        // 2. Répartition du Stock par Catégorie
+        $repartitionStock = Article::join('stocks', 'articles.id', '=', 'stocks.article_id')
+            ->select('articles.categorie', \DB::raw('SUM(stocks.stock_actuel) as quantite'))
+            ->groupBy('articles.categorie')
+            ->get();
+
+        // 3. Top 5 Articles Vendus
+        $topArticles = Article::join('sale_article', 'articles.id', '=', 'sale_article.article_id')
+            ->join('sales', 'sales.id', '=', 'sale_article.sale_id')
+            ->where('sales.status', 'Validee')
+            ->select('articles.nom', \DB::raw('SUM(sale_article.quantite) as quantite'))
+            ->groupBy('articles.id', 'articles.nom')
+            ->orderByDesc('quantite')
+            ->take(5)
+            ->get();
+
         return response()->json([
             'data' => [
                'salesValidee' => $salesValidee,
@@ -43,6 +73,9 @@ class DashboardController extends Controller
                'supplierCount' => $supplierCount,
                'articlesCount' => $articlesCount,
                'unpaidFactures' => $unpaidFactures,
+               'evolutionVentes' => $evolutionVentes,
+               'repartitionStock' => $repartitionStock,
+               'topArticles' => $topArticles,
             ]
         ], 200);
 
