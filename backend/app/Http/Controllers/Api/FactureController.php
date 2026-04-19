@@ -24,6 +24,7 @@ class FactureController extends Controller
         if ($facture->status === 'PENDING') {
             $facture->update([
                 'status' => 'PAID',
+                'date_payment' => date('Y-m-d H:i:s'),
             ]);
              
             return new FactureResource($facture);
