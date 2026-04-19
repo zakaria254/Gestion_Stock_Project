@@ -44,7 +44,6 @@ import {
   stock,
   sales,
   saleItems,
-  invoices,
   salesByMonth,
   stockByArticle,
   invoiceStatusData,
@@ -53,6 +52,8 @@ import {
   SALE_STATUS,
   stockMovements,
 } from '../data/mockData'
+
+import { invoicesService as realInvoicesService } from './invoicesService'
 
 // Simule un délai réseau
 const delay = (ms = 300) => new Promise(resolve => setTimeout(resolve, ms))
@@ -635,48 +636,7 @@ export const salesService = {
 // ===== FACTURES =====
 let invoicesData = [...invoices]
 
-export const invoicesService = {
-  async getAll() {
-    await delay()
-    return [...invoicesData]
-  },
-
-  async getById(id) {
-    await delay()
-    return invoicesData.find(i => i.id === id) || null
-  },
-
-  async create(invoiceData) {
-    await delay()
-    const client = clientsData.find(c => c.id === invoiceData.clientId)
-    const newInvoice = {
-      ...invoiceData,
-      montantTotal: Number(invoiceData.montantTotal || 0),
-      id: generateId(),
-      numero: `FAC-${new Date().getFullYear()}-${String(invoicesData.length + 1).padStart(3, '0')}`,
-      clientNom: client?.nom || '',
-      dateEmission: new Date().toISOString().split('T')[0],
-    }
-    invoicesData.push(newInvoice)
-    return newInvoice
-  },
-
-  async updateStatus(id, status) {
-    await delay()
-    const index = invoicesData.findIndex(i => i.id === id)
-    if (index !== -1) {
-      invoicesData[index].status = status
-      return invoicesData[index]
-    }
-    return null
-  },
-
-  async delete(id) {
-    await delay()
-    invoicesData = invoicesData.filter(i => i.id !== id)
-    return { success: true }
-  },
-}
+export const invoicesService = realInvoicesService;
 
 // ===== DASHBOARD =====
 export const dashboardService = {
