@@ -45,7 +45,7 @@ export default function LoginPage() {
             />
           </div>
           <h1 className="text-2xl font-bold text-foreground">
-            Gestion Stock Halal
+            Gestion Stock
           </h1>
           <p className="text-muted-foreground mt-1">
             Distribution & Logistique
