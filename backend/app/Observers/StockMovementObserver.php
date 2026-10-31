@@ -5,22 +5,21 @@ namespace App\Observers;
 use App\Models\StockMovement;
 use App\Services\StockService;
 
+/**
+ * Keeps stocks.stock_actuel in sync with the movements.
+ * Callers must wrap the movement write in a transaction so a refused
+ * stock change also rolls back the movement row.
+ */
 class StockMovementObserver
 {
+    public function __construct(private StockService $stockService) {}
+
     /**
      * Handle the StockMovement "created" event.
      */
     public function created(StockMovement $stockMovement): void
     {
-        $article_id = $stockMovement->stock->article_id;
-
-        $this->applyStockChange($stockMovement->type, $article_id, $stockMovement->quantite);
-        // $stock_service = new StockService;
-        // if ($stockMovement->type === 'in') {
-        //     $stock_service->increment($stockMovement->article_id, $stockMovement->quantite);
-        // } else {
-        //     $stock_service->decrement($stockMovement->article_id, $stockMovement->quantite);
-        // }
+        $this->stockService->apply($stockMovement->stock_id, $stockMovement->type, $stockMovement->quantite);
     }
 
     /**
@@ -28,35 +27,23 @@ class StockMovementObserver
      */
     public function updated(StockMovement $stockMovement): void
     {
-        if (!$stockMovement->wasChanged(['quantite', 'type'])) return;
-        $article_id = $stockMovement->stock->article_id;
-        $new_type = $stockMovement->type;
-        $old_type = $stockMovement->getOriginal('type');
-        $new_quantite = $stockMovement->quantite;
-        $old_quantite = $stockMovement->getOriginal('quantite');
-        $reverse_type = $old_type === 'in' ? 'out' : 'in';
-        // what was applyed to the stock when the movement was first created
-        $old_movement = $old_type === 'in' ? $old_quantite : -$old_quantite;
-        // what should applyed to the stock after the edite 
-        $new_movement = $new_type === 'in' ? $new_quantite : -$new_quantite;
-
-        $net_change = $new_movement - $old_movement;
-
-        if ($net_change > 0) {
-            $this->applyStockChange('in', $article_id, $net_change);
-        } else {
-            $this->applyStockChange('out', $article_id, abs($net_change));
+        if (! $stockMovement->wasChanged(['quantite', 'type', 'stock_id'])) {
+            return;
         }
 
-        return;
-    }
+        $oldStockId = (int) $stockMovement->getOriginal('stock_id');
+        $oldEffect = $this->signed($stockMovement->getOriginal('type'), $stockMovement->getOriginal('quantite'));
+        $newEffect = $this->signed($stockMovement->type, $stockMovement->quantite);
 
-    public function applyStockChange(string $type, int $article_id, float $quantite)
-    {
-        $stock_service = new StockService;
-        $method = $type === 'in' ? 'increment' : 'decrement';
-        
-        $stock_service->$method($article_id, $quantite);
+        if ($oldStockId === (int) $stockMovement->stock_id) {
+            $this->applyDelta($stockMovement->stock_id, $newEffect - $oldEffect);
+
+            return;
+        }
+
+        // moved to another stock: undo on the old one, apply on the new one
+        $this->applyDelta($oldStockId, -$oldEffect);
+        $this->applyDelta($stockMovement->stock_id, $newEffect);
     }
 
     /**
@@ -64,22 +51,20 @@ class StockMovementObserver
      */
     public function deleted(StockMovement $stockMovement): void
     {
-        //
+        $this->stockService->revert($stockMovement->stock_id, $stockMovement->type, $stockMovement->quantite);
     }
 
-    /**
-     * Handle the StockMovement "restored" event.
-     */
-    public function restored(StockMovement $stockMovement): void
+    private function signed(string $type, float $quantite): float
     {
-        //
+        return $type === StockMovement::TYPE_IN ? $quantite : -$quantite;
     }
 
-    /**
-     * Handle the StockMovement "force deleted" event.
-     */
-    public function forceDeleted(StockMovement $stockMovement): void
+    private function applyDelta(int $stockId, float $delta): void
     {
-        //
+        if ($delta > 0) {
+            $this->stockService->increase($stockId, $delta);
+        } elseif ($delta < 0) {
+            $this->stockService->decrease($stockId, -$delta);
+        }
     }
 }

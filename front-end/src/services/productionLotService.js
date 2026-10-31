@@ -53,7 +53,7 @@ export const productionLotService = {
   },
 
   markAsCompleted: async (id) => {
-    const response = await api.get(`/production_lots/completed/${id}`);
+    const response = await api.post(`/production_lots/${id}/complete`);
     return response.data;
   }
 };
