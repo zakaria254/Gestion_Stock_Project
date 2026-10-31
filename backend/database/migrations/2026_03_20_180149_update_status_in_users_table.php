@@ -22,7 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->enum('status', ['active', 'inactive'])->default('active')->change();
+            $table->enum('status', ['active', 'inactive'])->default(null)->change();
         });
     }
 };

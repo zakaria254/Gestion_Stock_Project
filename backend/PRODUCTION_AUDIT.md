@@ -138,7 +138,7 @@ Severity:
 - [x] **BUG-15 (MEDIUM) A completed production lot can be deleted**, leaving the
   stock it generated in place with no trace of its origin.
 
-- [ ] **BUG-16 (MEDIUM) `sales.date_vente` default is frozen at migration time**
+- [x] **BUG-16 (MEDIUM) `sales.date_vente` default is frozen at migration time**
   (`->default(date('Y-m-d H:i:s'))` is evaluated once when the migration runs).
 
 - [x] **BUG-17 (LOW) `SaleController::update` overwrites `user_id`** with the
@@ -146,14 +146,14 @@ Severity:
 
 ## 3. Data integrity (database)
 
-- [ ] **DB-1 (CRITICAL) Cascading deletes destroy financial history.**
+- [x] **DB-1 (CRITICAL) Cascading deletes destroy financial history.**
   `sales.user_id`, `sales.client_id`, `sale_article.article_id`,
   `stocks.article_id → stock_movements` are all `onDelete('cascade')`.
   Deleting a user deletes all their sales and invoices; deleting a client or an
   article does the same. → `restrict` FKs + `409 Conflict` from the API with a
   clear message.
 
-- [ ] **DB-2 (MEDIUM) Broken `down()` migrations.** Several "update" migrations
+- [x] **DB-2 (MEDIUM) Broken `down()` migrations.** Several "update" migrations
   have a `down()` identical to `up()` (or that re-adds an existing column), so
   rollbacks fail or do nothing.
 
@@ -190,7 +190,7 @@ Severity:
 - [ ] **PERF-1 (MEDIUM) Dashboard stock value computed in PHP** by loading every
   stock row; 7 separate queries for the 7-day chart. → Single SQL aggregates.
 
-- [ ] **PERF-2 (LOW) Missing indexes** on columns used for filtering/aggregation:
+- [x] **PERF-2 (LOW) Missing indexes** on columns used for filtering/aggregation:
   `sales.status`, `sales.created_at`, `factures.status`, `users.status`.
 
 ## 6. Configuration & operations

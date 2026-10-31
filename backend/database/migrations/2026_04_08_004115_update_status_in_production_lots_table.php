@@ -22,7 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('production_lots', function (Blueprint $table) {
-            $table->string('status')->default('IN_PROGRESS')->change();
+            $table->enum('status', ['AVAILABLE', 'IN_PROGRESS', 'COMPLETED'])->default(null)->change();
         });
     }
 };

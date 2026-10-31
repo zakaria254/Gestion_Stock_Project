@@ -22,7 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('production_lots', function (Blueprint $table) {
-            $table->string('certificat_abattage')->nullable()->change();
+            $table->string('certificat_abattage')->nullable(false)->change();
         });
     }
 };
