@@ -2,40 +2,62 @@
 
 namespace App\Services;
 
+use App\Exceptions\InsufficientStockException;
 use App\Models\Stock;
+use App\Models\StockMovement;
+use Illuminate\Support\Facades\DB;
 
 class StockService
 {
+    public function increase(int $stockId, float $quantite): Stock
+    {
+        return $this->change($stockId, $quantite);
+    }
+
     /**
-     * Create a new class instance.
+     * @throws InsufficientStockException
      */
-    public function __construct()
+    public function decrease(int $stockId, float $quantite): Stock
     {
-        //
+        return $this->change($stockId, -$quantite);
     }
 
-    public function decrement($article_id, $quantite)
+    /**
+     * Apply (or undo) the effect of a movement of the given type.
+     */
+    public function apply(int $stockId, string $type, float $quantite): Stock
     {
-        $stock = Stock::where('article_id', $article_id)->first();
-
-        if (!$stock) {
-            throw new \RuntimeException("stock record not found for Article ID: {$article_id}");
-        }
-
-        if ($stock->stock_actuel  < $quantite) {
-            throw new \RuntimeException("Insufficient stock for Article ID: {$article_id}. Available: {$stock->stock_actuel}, Requested: {$quantite}");
-        }
-
-        return $stock->decrement('stock_actuel', $quantite);
+        return $type === StockMovement::TYPE_IN
+            ? $this->increase($stockId, $quantite)
+            : $this->decrease($stockId, $quantite);
     }
 
-    public function increment($article_id, $quantite)
+    public function revert(int $stockId, string $type, float $quantite): Stock
     {
-        $stock = Stock::where('article_id', $article_id)->first();
-        if (!$stock) {
-            throw new \RuntimeException("Stock record not found for Article ID: {$article_id}");
-        }
+        return $type === StockMovement::TYPE_IN
+            ? $this->decrease($stockId, $quantite)
+            : $this->increase($stockId, $quantite);
+    }
 
-        return $stock->increment('stock_actuel', $quantite);
+    /**
+     * The row is locked so concurrent movements can't both pass the availability check,
+     * and saved through Eloquent so StockObserver recomputes the status.
+     */
+    private function change(int $stockId, float $delta): Stock
+    {
+        return DB::transaction(function () use ($stockId, $delta) {
+            $stock = Stock::whereKey($stockId)->lockForUpdate()->firstOrFail();
+
+            $newQuantity = round((float) $stock->stock_actuel + $delta, 2);
+
+            if ($newQuantity < 0) {
+                throw new InsufficientStockException($stock, abs($delta));
+            }
+
+            $stock->stock_actuel = $newQuantity;
+            $stock->save();
+
+            return $stock;
+        });
     }
 }

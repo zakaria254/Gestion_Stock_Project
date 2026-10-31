@@ -5,7 +5,6 @@ namespace App\Observers;
 use App\Models\ProductionLot;
 use App\Models\StockMovement;
 
-
 class ProductionLotObserver
 {
     /**
@@ -13,18 +12,8 @@ class ProductionLotObserver
      */
     public function created(ProductionLot $productionLot): void
     {
-        if ($productionLot->status === "COMPLETED")
-        {
-            $stock = $productionLot->article->stock;
-            if ($stock) {
-                StockMovement::create([
-                    'stock_id' => $stock->id,
-                    'type' => 'in',
-                    'quantite' => $productionLot->quantite,
-                    'is_generated' => true,
-                    'motif' => 'Production',
-                ]);
-            }
+        if ($productionLot->status === ProductionLot::STATUS_COMPLETED) {
+            $this->addProductionToStock($productionLot);
         }
     }
 
@@ -33,48 +22,23 @@ class ProductionLotObserver
      */
     public function updated(ProductionLot $productionLot): void
     {
-        $new_status = $productionLot->status ;
-        $new_quantite = $productionLot->quantite; 
-        
-
-        if ($productionLot->wasChanged('status') && $new_status === 'COMPLETED')
-        {
-            $stock = $productionLot->article->stock;
-            if ($stock) {
-                StockMovement::create([
-                    'stock_id' => $stock->id,
-                    'type' => 'in',
-                    'quantite' => $new_quantite,
-                    'is_generated' => true,
-                    'motif' => 'Production',
-                ]);
-            }
-
-            return;
+        if ($productionLot->wasChanged('status') && $productionLot->status === ProductionLot::STATUS_COMPLETED) {
+            $this->addProductionToStock($productionLot);
         }
     }
 
-    /**
-     * Handle the ProductionLot "deleted" event.
-     */
-    public function deleted(ProductionLot $productionLot): void
+    private function addProductionToStock(ProductionLot $productionLot): void
     {
-        //
-    }
+        $stock = $productionLot->article->stock;
 
-    /**
-     * Handle the ProductionLot "restored" event.
-     */
-    public function restored(ProductionLot $productionLot): void
-    {
-        //
-    }
-
-    /**
-     * Handle the ProductionLot "force deleted" event.
-     */
-    public function forceDeleted(ProductionLot $productionLot): void
-    {
-        //
+        if ($stock) {
+            StockMovement::create([
+                'stock_id' => $stock->id,
+                'type' => StockMovement::TYPE_IN,
+                'quantite' => $productionLot->quantite,
+                'is_generated' => true,
+                'motif' => 'Production',
+            ]);
+        }
     }
 }

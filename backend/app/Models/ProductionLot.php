@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -10,6 +9,12 @@ class ProductionLot extends Model
 {
     /** @use HasFactory<\Database\Factories\ProductionLotFactory> */
     use HasFactory;
+
+    public const STATUS_AVAILABLE = 'AVAILABLE';
+
+    public const STATUS_IN_PROGRESS = 'IN_PROGRESS';
+
+    public const STATUS_COMPLETED = 'COMPLETED';
 
     protected $fillable = [
         'numero_lot',

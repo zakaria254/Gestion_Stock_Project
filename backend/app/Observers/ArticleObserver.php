@@ -8,7 +8,7 @@ use App\Models\Stock;
 class ArticleObserver
 {
     /**
-     * Handle the Article "created" event.
+     * Every article gets its stock row.
      */
     public function created(Article $article): void
     {
@@ -24,34 +24,11 @@ class ArticleObserver
      */
     public function updated(Article $article): void
     {
+        // model update (not a query update) so StockObserver recomputes the status
         if ($article->wasChanged('seuil_minimum')) {
-            $article->stock()->update([
-                'seuil_minimun' => $article->seuil_minimum
+            $article->stock()->first()?->update([
+                'seuil_minimun' => $article->seuil_minimum,
             ]);
         }
-    }
-
-    /**
-     * Handle the Article "deleted" event.
-     */
-    public function deleted(Article $article): void
-    {
-        //
-    }
-
-    /**
-     * Handle the Article "restored" event.
-     */
-    public function restored(Article $article): void
-    {
-        //
-    }
-
-    /**
-     * Handle the Article "force deleted" event.
-     */
-    public function forceDeleted(Article $article): void
-    {
-        //
     }
 }

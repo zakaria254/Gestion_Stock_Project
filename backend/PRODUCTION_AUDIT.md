@@ -75,26 +75,26 @@ Severity:
 
 ## 2. Business logic / data correctness
 
-- [ ] **BUG-1 (HIGH) Stock status (`Disponible`/`Faible`/`Rupture`) is never
+- [x] **BUG-1 (HIGH) Stock status (`Disponible`/`Faible`/`Rupture`) is never
   updated after a movement.** `StockService` uses `$stock->increment()` /
   `decrement()`, which do not fire the `saving` event that `StockObserver` uses
   to compute the status. Every stock stays at the status it was created with.
 
-- [ ] **BUG-2 (HIGH) Race conditions on stock.** The stock is read, checked, then
+- [x] **BUG-2 (HIGH) Race conditions on stock.** The stock is read, checked, then
   decremented without a row lock; two concurrent sales can both pass the
   "enough stock" check and drive the stock negative.
   → `lockForUpdate()` inside a transaction.
 
-- [ ] **BUG-3 (HIGH) Insufficient stock returns a 500.** `StockService` throws
+- [x] **BUG-3 (HIGH) Insufficient stock returns a 500.** `StockService` throws
   `RuntimeException`, which is rendered as a server error (with the stack trace
   when `APP_DEBUG=true`). → Dedicated exception rendered as `422`.
 
-- [ ] **BUG-4 (HIGH) Deleting a stock movement does not reverse its effect on
+- [x] **BUG-4 (HIGH) Deleting a stock movement does not reverse its effect on
   the stock**, and generated movements (from sales / production) can be deleted
   through the API. → Reverse the quantity on delete; forbid deleting generated
   movements.
 
-- [ ] **BUG-5 (HIGH) Updating a movement's `stock_id` is not handled** — the
+- [x] **BUG-5 (HIGH) Updating a movement's `stock_id` is not handled** — the
   observer applies the delta to the *new* stock and never restores the old one.
 
 - [ ] **BUG-6 (HIGH) Sale created directly as `Validee` gets no invoice.** The
@@ -135,7 +135,7 @@ Severity:
   simultaneous "validate" calls on the same sale both see `En attente` and
   decrement stock twice. Same for completing a production lot (stock added twice).
 
-- [ ] **BUG-15 (MEDIUM) A completed production lot can be deleted**, leaving the
+- [x] **BUG-15 (MEDIUM) A completed production lot can be deleted**, leaving the
   stock it generated in place with no trace of its origin.
 
 - [ ] **BUG-16 (MEDIUM) `sales.date_vente` default is frozen at migration time**
@@ -229,7 +229,7 @@ Severity:
   `AuthenticatedSessionController`, broadcast boilerplate in
   `SaleValidatedEvent` (`PrivateChannel('channel-name')`), unused imports.
 
-- [ ] **HYG-2 (LOW) `new StockService` instantiated by hand** inside an observer,
+- [x] **HYG-2 (LOW) `new StockService` instantiated by hand** inside an observer,
   dynamic method call `$stock_service->$method(...)`. → Inject from the container.
 
 - [ ] **HYG-3 (LOW) Magic strings for statuses** (`'Validee'`, `'En attente'`,

@@ -10,6 +10,10 @@ class StockMovement extends Model
     /** @use HasFactory<\Database\Factories\StockMovementFactory> */
     use HasFactory;
 
+    public const TYPE_IN = 'in';
+
+    public const TYPE_OUT = 'out';
+
     protected $fillable = [
         'stock_id',
         'type',
