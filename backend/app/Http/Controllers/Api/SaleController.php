@@ -2,23 +2,24 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Events\SaleValidatedEvent;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreUpdateSaleRequest;
 use App\Http\Resources\SaleResource;
 use App\Models\Sale;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-
+use App\Services\SaleService;
 
 class SaleController extends Controller
 {
+    private const RELATIONS = ['client', 'articles', 'user'];
+
+    public function __construct(private SaleService $sales) {}
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $sales = Sale::with(['client', 'articles', 'user'])->latest()->paginate(12);
+        $sales = Sale::with(self::RELATIONS)->latest()->paginate(12);
 
         return SaleResource::collection($sales);
     }
@@ -28,52 +29,17 @@ class SaleController extends Controller
      */
     public function store(StoreUpdateSaleRequest $request)
     {
-        //start a transaction
-        return DB::transaction(function () use ($request) {
-            $validated = $request->validated();
-            //convert articles array into a collection and use the sum method to calculate montant_total
-            $montant_total = collect($validated['articles'])->sum(function ($item) {
-                return $item['quantite'] * $item['prix_unitaire'];
-            });
+        $sale = $this->sales->create($request->validated(), $request->user());
 
-            //create the sale record
-            $sale = Sale::create([
-                 'numero' => $validated['numero'],
-                 'client_id' => $validated['client_id'],
-                 'user_id' => Auth::id(),
-                 'montant_total' => $montant_total,
-                 'adresse_livraison' => $validated['adresse_livraison'],
-                 'date_livraison' => $validated['date_livraison'],
-                 'status' => $validated['status'] ?? 'En attente',
-                 'date_vente' => $validated['date_vente'] ?? date('Y-m-d H:i:s'),
-            ]);
-
-            
-            
-            foreach ($validated['articles'] as $article) {
-                $sale->articles()->attach($article['id'], [
-                    'quantite' => $article['quantite'],
-                    'prix_unitaire' => $article['prix_unitaire'],
-                    'total' => $article['quantite'] * $article['prix_unitaire']
-                ]);
-            }
-            
-            //trigger the event to decrese the stock of the articles in the sale after the sale is validated 
-            if ($validated['status'] === 'Validee') {
-                event(new SaleValidatedEvent($sale));
-            }
-            
-            $sale->load(['client', 'articles', 'user']);
-            return (new SaleResource($sale))->response()->setStatusCode(201);
-        });
+        return (new SaleResource($sale->load(self::RELATIONS)))->response()->setStatusCode(201);
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Sale $sale)
     {
-        //
+        return new SaleResource($sale->load(self::RELATIONS));
     }
 
     /**
@@ -81,77 +47,19 @@ class SaleController extends Controller
      */
     public function update(StoreUpdateSaleRequest $request, Sale $sale)
     {
-        if ($sale->status !== 'Validee') {
-            return DB::transaction(function () use ($request, $sale) {
-                $validated = $request->validated();
+        $sale = $this->sales->update($sale, $request->validated());
 
-                $montant_total = collect($validated['articles'])->sum(function ($article) {
-                    return $article['prix_unitaire'] * $article['quantite'];
-                });
-                
-                $sale->update([
-                    'numero' => $validated['numero'],
-                    'client_id' => $validated['client_id'],
-                    'user_id' => Auth::id(),
-                    'montant_total' => $montant_total,
-                    'adresse_livraison' => $validated['adresse_livraison'],
-                    'date_livraison' => $validated['date_livraison'],
-                    'status' => $validated['status'] ?? 'En attente',
-                    'date_vente' => $validated['date_vente']
-                ]);
-
-                foreach ($validated['articles'] as $article) {
-                    $sale->articles()->syncWithoutDetaching([
-                        $article['id'] => [
-                            'quantite' => $article['quantite'],
-                            'prix_unitaire' => $article['prix_unitaire'],
-                            'total' => $article['quantite'] * $article['prix_unitaire'],
-                        ]
-                    ]);
-                }
-
-                $sale->load(['client', 'articles', 'user']);
-                return new SaleResource($sale);
-            });
-        } 
-
-        return response()->json([
-            'message' => 'action denied !'
-        ], 403);
+        return new SaleResource($sale->load(self::RELATIONS));
     }
 
-    public function validate_sale (Sale $sale) {
-        if ($sale->status === 'En attente') {
-            return DB::transaction(function () use ($sale) {
-                $sale->update([
-                    'status' => 'Validee'
-                ]);
-
-                //trigger the event to decrese the stock of the articles in the sale after the sale is validated 
-                event(new SaleValidatedEvent($sale));
-
-                return new SaleResource($sale->load(['articles', 'client', 'user']));
-            });
-        }
-
-        return response()->json([
-            'mesage' => 'this sale can not be validated ',
-        ], 403);
-    }
-
-    public function annuler_sale (Sale $sale)
+    public function validateSale(Sale $sale)
     {
-        if ($sale->status === 'En attente') {
-            $sale->update([
-                'status' => 'Annulee',
-            ]);
+        return new SaleResource($this->sales->validate($sale)->load(self::RELATIONS));
+    }
 
-            return new SaleResource($sale->load(['articles', 'client', 'user']));
-        }
-
-        return response()->json([
-            'message' => 'this sale can not be canceled ',
-        ], 403);
+    public function cancel(Sale $sale)
+    {
+        return new SaleResource($this->sales->cancel($sale)->load(self::RELATIONS));
     }
 
     /**
@@ -159,14 +67,14 @@ class SaleController extends Controller
      */
     public function destroy(Sale $sale)
     {
-        if ($sale->status === 'Annulee') {
-            $sale->delete();
-
-            return response()->noContent(); 
+        if ($sale->status !== Sale::STATUS_ANNULEE) {
+            return response()->json([
+                'message' => 'Only a canceled sale can be deleted.',
+            ], 409);
         }
 
-        return response()->json([
-            'message' => 'action denied '
-        ], 403);
+        $sale->delete();
+
+        return response()->noContent();
     }
 }

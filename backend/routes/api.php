@@ -33,12 +33,12 @@ Route::middleware(['auth:sanctum', 'active', 'can:admin_only'])->group(function 
 // routes admin and ventes can access
 Route::middleware(['auth:sanctum', 'active', 'can:ventes_admin_access'])->group(function () {
     Route::apiResource('clients', ClientController::class);
-    Route::apiResource('sales', SaleController::class)->except(['show']);
-    Route::get('/sales/validate/{sale}', [SaleController::class, 'validate_sale']);
-    Route::get('/sales/annuler/{sale}', [SaleController::class, 'annuler_sale']);
-    Route::get('/factures', [FactureController::class, 'index']);
-    Route::get('/factures/{facture}/paid', [FactureController::class, 'facturePaid']);
-    Route::get('/factures/{facture}/unpaid', [FactureController::class, 'factureUnpaid']);
+    Route::apiResource('sales', SaleController::class);
+    Route::post('/sales/{sale}/validate', [SaleController::class, 'validateSale']);
+    Route::post('/sales/{sale}/cancel', [SaleController::class, 'cancel']);
+    Route::apiResource('factures', FactureController::class)->only(['index', 'show']);
+    Route::post('/factures/{facture}/paid', [FactureController::class, 'markPaid']);
+    Route::post('/factures/{facture}/unpaid', [FactureController::class, 'markUnpaid']);
 });
 
 // routes admin and stock can access 

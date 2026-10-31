@@ -102,11 +102,11 @@ export const saleService = {
 
   async updateSaleStatus(id, newStatus) {
     if (newStatus === SALE_STATUS.VALIDEE) {
-      const response = await api.get(`/sales/validate/${id}`)
+      const response = await api.post(`/sales/${id}/validate`)
       return response.data?.data || response.data
     }
     if (newStatus === SALE_STATUS.ANNULEE) {
-      const response = await api.get(`/sales/annuler/${id}`)
+      const response = await api.post(`/sales/${id}/cancel`)
       return response.data?.data || response.data
     }
     throw new Error(`Le statut ${newStatus} n'est pas géré par l'API.`)
