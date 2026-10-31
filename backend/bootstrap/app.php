@@ -14,15 +14,20 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->api(prepend: [
-            \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
-        ]);
+        // token-only API: no Sanctum stateful (cookie + CSRF) middleware
+        $middleware->throttleApi();
+
+        // no login page to redirect to: unauthenticated API calls get a JSON 401
+        $middleware->redirectGuestsTo(fn (Request $request) => $request->is('api/*') ? null : '/');
 
         $middleware->alias([
             'active' => \App\Http\Middleware\EnsureUserIsActive::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        // API errors are always JSON, whatever the Accept header
+        $exceptions->shouldRenderJsonWhen(fn (Request $request) => $request->is('api/*') || $request->expectsJson());
+
         // a parent row still referenced by sales, invoices or movements (restricted foreign keys)
         $exceptions->render(function (QueryException $e, Request $request) {
             $isConstraintViolation = in_array($e->getCode(), ['23000', '23503'], true);

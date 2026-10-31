@@ -21,7 +21,7 @@ class UserController extends Controller
             $query->where('status', $request->string('status'));
         }
 
-        $users = $query->latest()->paginate(12);
+        $users = $query->latest()->paginate($this->perPage());
 
         return UserResource::collection($users);
     }

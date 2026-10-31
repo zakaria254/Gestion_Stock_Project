@@ -9,75 +9,72 @@ use App\Models\Facture;
 use App\Models\Sale;
 use App\Models\Stock;
 use App\Models\Supplier;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
-    public function statistic() {
-        $salesValidee = Sale::where('status', 'Validee')->sum('montant_total');
+    public function statistic()
+    {
+        $stockValue = Stock::join('articles', 'articles.id', '=', 'stocks.article_id')
+            ->sum(DB::raw('articles.prix * stocks.stock_actuel'));
 
-        $stockValue = 0;
-        Stock::with('article:id,prix')->chunk(100, function ($stocks) use (&$stockValue) {
-            foreach ($stocks as $stock) {
-                $stockValue += ($stock->article->prix * $stock->stock_actuel);
-            }
-        });
+        return response()->json([
+            'data' => [
+                'salesValidee' => Sale::where('status', Sale::STATUS_VALIDEE)->sum('montant_total'),
+                'stockValue' => (float) $stockValue,
+                'stocksAlerts' => Stock::whereColumn('stock_actuel', '<=', 'seuil_minimun')->count(),
+                'pendingSales' => Sale::where('status', Sale::STATUS_EN_ATTENTE)->count(),
+                'clientsCount' => Client::count(),
+                'supplierCount' => Supplier::count(),
+                'articlesCount' => Article::count(),
+                'unpaidFactures' => Facture::where('status', Facture::STATUS_UNPAID)->count(),
+                'evolutionVentes' => $this->salesLastSevenDays(),
+                'repartitionStock' => $this->stockByCategory(),
+                'topArticles' => $this->topArticles(),
+            ],
+        ]);
+    }
 
-        $stocksAlerts = Stock::whereColumn('stock_actuel', '<=', 'seuil_minimun')->count();
+    /**
+     * Validated sales per day, one query, days without sales filled with 0.
+     */
+    private function salesLastSevenDays(): array
+    {
+        $start = now()->subDays(6)->startOfDay();
 
-        $pendingSales = Sale::where('status', 'En attente')->count();
+        $totals = Sale::where('status', Sale::STATUS_VALIDEE)
+            ->where('created_at', '>=', $start)
+            ->selectRaw('DATE(created_at) as day, SUM(montant_total) as total')
+            ->groupBy('day')
+            ->pluck('total', 'day');
 
-        $clientsCount = Client::count();
-        $supplierCount = Supplier::count();
-        $articlesCount = Article::count();
+        return collect(range(0, 6))->map(function ($offset) use ($start, $totals) {
+            $day = $start->copy()->addDays($offset);
 
-        $unpaidFactures = Facture::where('status', 'UNPAID')->count();
-
-        // 1. Évolution des Ventes (7 derniers jours)
-        $evolutionVentes = [];
-        for ($i = 6; $i >= 0; $i--) {
-            $date = now()->subDays($i)->format('Y-m-d');
-            $total = Sale::where('status', 'Validee')
-                         ->whereDate('created_at', $date)
-                         ->sum('montant_total');
-            
-            $evolutionVentes[] = [
-                'jour' => now()->subDays($i)->format('d/m'),
-                'ventes' => (float)$total
+            return [
+                'jour' => $day->format('d/m'),
+                'ventes' => (float) ($totals[$day->format('Y-m-d')] ?? 0),
             ];
-        }
+        })->all();
+    }
 
-        // 2. Répartition du Stock par Catégorie
-        $repartitionStock = Article::join('stocks', 'articles.id', '=', 'stocks.article_id')
-            ->select('articles.categorie', \DB::raw('SUM(stocks.stock_actuel) as quantite'))
+    private function stockByCategory()
+    {
+        return Article::join('stocks', 'articles.id', '=', 'stocks.article_id')
+            ->select('articles.categorie', DB::raw('SUM(stocks.stock_actuel) as quantite'))
             ->groupBy('articles.categorie')
             ->get();
+    }
 
-        // 3. Top 5 Articles Vendus
-        $topArticles = Article::join('sale_article', 'articles.id', '=', 'sale_article.article_id')
+    private function topArticles()
+    {
+        return Article::join('sale_article', 'articles.id', '=', 'sale_article.article_id')
             ->join('sales', 'sales.id', '=', 'sale_article.sale_id')
-            ->where('sales.status', 'Validee')
-            ->select('articles.nom', \DB::raw('SUM(sale_article.quantite) as quantite'))
+            ->where('sales.status', Sale::STATUS_VALIDEE)
+            ->select('articles.nom', DB::raw('SUM(sale_article.quantite) as quantite'))
             ->groupBy('articles.id', 'articles.nom')
             ->orderByDesc('quantite')
             ->take(5)
             ->get();
-
-        return response()->json([
-            'data' => [
-               'salesValidee' => $salesValidee,
-               'stockValue' => $stockValue,
-               'stocksAlerts' => $stocksAlerts,
-               'pendingSales' => $pendingSales,
-               'clientsCount' => $clientsCount,
-               'supplierCount' => $supplierCount,
-               'articlesCount' => $articlesCount,
-               'unpaidFactures' => $unpaidFactures,
-               'evolutionVentes' => $evolutionVentes,
-               'repartitionStock' => $repartitionStock,
-               'topArticles' => $topArticles,
-            ]
-        ], 200);
-
     }
 }

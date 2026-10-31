@@ -15,7 +15,7 @@ class ClientController extends Controller
      */
     public function index()
     {
-        $clients = Client::latest()->paginate(12);
+        $clients = Client::latest()->paginate($this->perPage());
 
         return ClientResource::collection($clients);
     }
@@ -34,9 +34,9 @@ class ClientController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Client $client)
     {
-        //
+        return new ClientResource($client);
     }
 
     /**

@@ -15,7 +15,7 @@ class ProductionLotController extends Controller
      */
     public function index()
     {
-        $lots = ProductionLot::with('article')->latest()->paginate(12);
+        $lots = ProductionLot::with('article')->latest()->paginate($this->perPage());
 
         return ProductionLotResource::collection($lots);
     }

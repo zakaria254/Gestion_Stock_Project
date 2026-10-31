@@ -11,7 +11,10 @@ use App\Observers\ArticleObserver;
 use App\Observers\ProductionLotObserver;
 use App\Observers\StockMovementObserver;
 use App\Observers\StockObserver;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -35,6 +38,15 @@ class AppServiceProvider extends ServiceProvider
         ProductionLot::observe(ProductionLotObserver::class);
         StockMovement::observe(StockMovementObserver::class);
 
+
+        RateLimiter::for('api', function (Request $request) {
+            return Limit::perMinute(120)->by($request->user()?->id ?: $request->ip());
+        });
+
+        // on top of the per email+IP lockout done in LoginRequest
+        RateLimiter::for('login', function (Request $request) {
+            return Limit::perMinute(10)->by($request->ip());
+        });
 
         //app gates and permission
         Gate::define('admin_only', function (User $user) {
