@@ -88,6 +88,12 @@ class UserController extends Controller
             ], 409);
         }
 
+        if ($user->sales()->exists()) {
+            return response()->json([
+                'message' => 'This user has sales and can not be deleted. Deactivate the account instead.',
+            ], 409);
+        }
+
         $user->tokens()->delete();
         $user->delete();
 

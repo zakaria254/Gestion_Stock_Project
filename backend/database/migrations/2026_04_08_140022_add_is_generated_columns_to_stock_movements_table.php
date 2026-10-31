@@ -22,7 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('stock_movements', function (Blueprint $table) {
-            $table->boolean('is_generated')->default(false);
+            $table->dropColumn('is_generated');
         });
     }
 };
