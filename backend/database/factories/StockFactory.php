@@ -21,8 +21,8 @@ class StockFactory extends Factory
         return [
             // ArticleObserver already creates a stock row: build the article without events
             'article_id' => fn () => Article::withoutEvents(fn () => Article::factory()->create())->id,
-            'stock_actuel' => fake()->randomFloat(2, 0,100),
-            'seuil_minimun' => fake()->numberBetween(10,30),
+            'stock_actuel' => fake()->randomFloat(2, 0, 100),
+            'seuil_minimun' => fake()->numberBetween(10, 30),
         ];
     }
 }

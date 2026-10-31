@@ -4,9 +4,6 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use App\Http\Resources\ClientResource;
-use App\Http\Resources\ArticleResource;
-
 
 class FactureResource extends JsonResource
 {
@@ -26,7 +23,7 @@ class FactureResource extends JsonResource
             'status' => $this->status,
             'montant_total' => $this->montant_total,
             'date_payment' => $this->date_payment ? $this->date_payment->format('Y-m-d H:i:s') : null,
-            'created_at' => $this->created_at->format('Y-m-d H:i:s')
+            'created_at' => $this->created_at->format('Y-m-d H:i:s'),
         ];
     }
 }

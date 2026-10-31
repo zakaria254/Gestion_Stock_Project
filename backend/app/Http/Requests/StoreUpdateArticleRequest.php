@@ -23,7 +23,7 @@ class StoreUpdateArticleRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'reference' => 'required|string|max:20|unique:articles,reference,' . $this->article?->id,
+            'reference' => 'required|string|max:20|unique:articles,reference,'.$this->article?->id,
             'nom' => 'required|string|max:255',
             'prix' => 'required|numeric|min:0',
             'unite' => 'required|string|max:20',

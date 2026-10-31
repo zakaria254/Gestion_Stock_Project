@@ -21,13 +21,13 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
     Route::get('/user', [AuthenticatedSessionController::class, 'show']);
 });
 
-// routes only admin can access 
+// routes only admin can access
 Route::middleware(['auth:sanctum', 'active', 'can:admin_only'])->group(function () {
     Route::apiResource('users', UserController::class);
     Route::apiResource('suppliers', SupplierController::class);
-    Route::apiResource('production_lots', ProductionLotController::class);   
+    Route::apiResource('production_lots', ProductionLotController::class);
     Route::post('/production_lots/{production_lot}/complete', [ProductionLotController::class, 'complete']);
-    Route::get('/dashboard', [DashboardController::class, 'statistic']);  
+    Route::get('/dashboard', [DashboardController::class, 'statistic']);
 });
 
 // routes admin and ventes can access
@@ -41,7 +41,7 @@ Route::middleware(['auth:sanctum', 'active', 'can:ventes_admin_access'])->group(
     Route::post('/factures/{facture}/unpaid', [FactureController::class, 'markUnpaid']);
 });
 
-// routes admin and stock can access 
+// routes admin and stock can access
 Route::middleware(['auth:sanctum', 'active', 'can:stock_admin_access'])->group(function () {
     Route::get('/stock', [StockController::class, 'index'])->name('stock');
     Route::apiResource('movements', StockMovementController::class);
@@ -49,5 +49,5 @@ Route::middleware(['auth:sanctum', 'active', 'can:stock_admin_access'])->group(f
 
 // articles routes admin stock and ventes can access
 Route::middleware(['auth:sanctum', 'active', 'can:manage_articles'])->group(function () {
-   Route::apiResource('articles', ArticleController::class); 
+    Route::apiResource('articles', ArticleController::class);
 });

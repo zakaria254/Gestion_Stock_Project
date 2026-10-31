@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use Database\Factories\SaleFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Sale extends Model
 {
-    /** @use HasFactory<\Database\Factories\SaleFactory> */
+    /** @use HasFactory<SaleFactory> */
     use HasFactory;
 
     public const STATUS_EN_ATTENTE = 'En attente';
@@ -46,11 +47,11 @@ class Sale extends Model
     public function articles()
     {
         return $this->belongsToMany(Article::class, 'sale_article')
-                    ->withPivot(['quantite', 'prix_unitaire', 'total'])
-                    ->withTimestamps();
+            ->withPivot(['quantite', 'prix_unitaire', 'total'])
+            ->withTimestamps();
     }
 
-    public function facture ()
+    public function facture()
     {
         return $this->hasOne(Facture::class);
     }

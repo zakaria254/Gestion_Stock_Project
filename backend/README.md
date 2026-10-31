@@ -1,58 +1,131 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Gestion Stock: Backend API
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+REST API (Laravel 13, Sanctum tokens) for the Gestion Stock front-end: articles and
+stock, stock movements, production lots, clients, suppliers, sales and invoices.
 
-## About Laravel
+## Requirements
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- PHP 8.3+ with `mbstring`, `pdo_mysql` (and `pdo_sqlite` for the tests)
+- Composer 2
+- MySQL 8 / MariaDB 10.6+
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
-
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
-
-## Learning Laravel
-
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## Local setup
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+composer setup             # install, copy .env.example to .env, key:generate, migrate
+php artisan db:seed        # admin + demo data (demo data is never seeded in production)
+php artisan serve          # http://localhost:8000
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+Default local admin (from `.env.example`): `admin@example.com` / `Admin1234`.
 
-## Contributing
+## Tests and code style
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```bash
+php artisan test           # Pest, in-memory SQLite
+composer lint              # Pint, --test mode (vendor/bin/pint to fix)
+composer audit             # known vulnerabilities in dependencies
+```
 
-## Code of Conduct
+CI (`.github/workflows/backend.yml`) runs all three on every push/PR touching `backend/`.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Configuration
 
-## Security Vulnerabilities
+| Variable | Default | Purpose |
+|---|---|---|
+| `FRONTEND_URL` | `http://localhost:5173` | SPA origin, default CORS origin |
+| `CORS_ALLOWED_ORIGINS` | `FRONTEND_URL` | Comma-separated list of allowed origins |
+| `SANCTUM_EXPIRATION` | `720` | API token lifetime in minutes |
+| `TVA_RATE` | `0.20` | VAT added to the sale amount on the invoice |
+| `ADMIN_EMAIL` / `ADMIN_ACCESS_CODE` | none | First admin created by `db:seed` (required in production) |
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## Authentication
 
-## License
+`POST /api/login` with `{ email, access_code }` returns `{ token }`. Send it as
+`Authorization: Bearer <token>`. `POST /api/logout` revokes it.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+- Access codes are hashed (never readable, never returned by the API), at least
+  8 characters with letters and numbers.
+- Inactive users can't log in and their existing tokens are refused (`403`).
+- Login: 5 failed attempts per email+IP, then a lockout; 10 requests/min per IP.
+  The rest of the API is limited to 120 requests/min per user.
+
+## Roles
+
+| Area | admin | ventes | stock |
+|---|:-:|:-:|:-:|
+| Users, suppliers, production lots, dashboard | ✓ | | |
+| Clients, sales, invoices | ✓ | ✓ | |
+| Stock, stock movements | ✓ | | ✓ |
+| Articles | ✓ | ✓ | ✓ |
+
+## Endpoints
+
+All routes are under `/api`, return JSON, and lists are paginated
+(`?page=`, `?per_page=` default 12, max 100).
+
+| Method | URI | Notes |
+|---|---|---|
+| POST | `/login`, `/logout` | |
+| GET | `/user` | Current user |
+| CRUD | `/users`, `/suppliers`, `/clients`, `/articles` | `GET /users?status=active` |
+| CRUD | `/production_lots` | A `COMPLETED` lot is read-only |
+| POST | `/production_lots/{id}/complete` | Adds the lot quantity to stock |
+| GET | `/stock` | |
+| CRUD | `/movements` | Generated movements (sales, production) are read-only |
+| CRUD | `/sales` | Only `En attente` sales can be updated; only `Annulee` can be deleted |
+| POST | `/sales/{id}/validate` | Stock out + invoice |
+| POST | `/sales/{id}/cancel` | |
+| GET | `/factures`, `/factures/{id}` | |
+| POST | `/factures/{id}/paid`, `/factures/{id}/unpaid` | |
+| GET | `/dashboard` | |
+| GET | `/up` (no prefix) | Health check |
+
+Status codes: `401` not authenticated, `403` role not allowed or account inactive,
+`404` not found, `409` action not allowed in the current state (e.g. validating a
+validated sale, deleting a client that has sales), `422` validation error or
+insufficient stock, `429` rate limited.
+
+## Business rules
+
+**Stock.** Every article has one stock row. Its quantity only changes through
+stock movements (`in` / `out`). Creating, editing or deleting a movement updates
+the stock in the same transaction, with the row locked. A movement that would make
+the stock negative is refused (`422`). The status is recomputed on every change:
+`Rupture` (≤ 0), `Faible` (≤ threshold), `Disponible`.
+
+**Sales.** `En attente` → `Validee` or `Annulee`. Validating creates one `out`
+movement per line and an invoice (`PENDING`, amount × (1 + `TVA_RATE`)). It is all or
+nothing: if one article lacks stock, nothing changes. A sale can also be created
+directly with `status: "Validee"`.
+
+**Invoices.** `PENDING` → `PAID` or `UNPAID`; `UNPAID` → `PAID`.
+
+**Deletes.** Records that are part of the history (users, clients and articles
+with sales, stock movements or production lots) can't be deleted (`409`).
+Deactivate users instead.
+
+## Production deployment
+
+1. Copy `.env.production.example` to `.env` and fill it: `APP_KEY`
+   (`php artisan key:generate`), DB credentials for a **dedicated non-root user**,
+   `APP_URL`, `FRONTEND_URL`, `ADMIN_EMAIL`, `ADMIN_ACCESS_CODE`.
+   Keep `APP_DEBUG=false`.
+2. Install and build:
+   ```bash
+   composer install --no-dev --optimize-autoloader
+   php artisan migrate --force
+   php artisan db:seed --force        # first deploy only: creates the admin
+   php artisan config:cache && php artisan route:cache && php artisan event:cache
+   ```
+3. Point the web server document root at `public/`, serve over HTTPS only.
+4. Make `storage/` and `bootstrap/cache/` writable by the PHP user.
+5. Add the scheduler to cron (prunes expired tokens):
+   `* * * * * cd /path/to/backend && php artisan schedule:run >> /dev/null 2>&1`
+6. Change the admin access code after the first login.
+
+Upgrading an existing database: migration `2026_10_31_000001` converts the old
+encrypted access codes to hashes, so users keep their current codes. It must run
+with the **same `APP_KEY`** that encrypted them. Back up the database before running it.
+
+See `PRODUCTION_AUDIT.md` for the issues found and fixed.

@@ -76,6 +76,13 @@ Severity:
   its requests switch to cookie sessions + CSRF and every `POST` (login included)
   fails with `419`. The front-end only uses Bearer tokens. → Remove it.
 
+- [ ] **SEC-15 (CRITICAL) Vulnerable dependencies.** `composer audit` reports 42
+  advisories in 11 locked packages, among them `laravel/framework` (critical
+  TokenGuard authentication bypass, CRLF injection in the `email` rule),
+  `symfony/http-foundation` (ReDoS via `Cache-Control`), `symfony/http-kernel`,
+  `symfony/mime`, `guzzlehttp/*`, `league/commonmark`.
+  → Update within the existing constraints and run `composer audit` in CI.
+
 - [x] **SEC-13 (LOW) The front-end logs the login payload (email + access code)
   to the console** (`front-end/src/services/auth.js`). → Remove the log.
 
@@ -201,20 +208,20 @@ Severity:
 
 ## 6. Configuration & operations
 
-- [ ] **OPS-1 (HIGH) `.env.example` is development-only** (`APP_DEBUG=true`,
+- [x] **OPS-1 (HIGH) `.env.example` is development-only** (`APP_DEBUG=true`,
   `LOG_LEVEL=debug`, `APP_NAME=Laravel`, DB user `root`). No production template
   or deployment documentation.
 
 - [x] **OPS-2 (MEDIUM) `app.frontend_url` is used but not defined** in
   `config/app.php` (reset-password links would be broken).
 
-- [ ] **OPS-3 (MEDIUM) No CI.** Nothing runs tests or the code style checker.
+- [x] **OPS-3 (MEDIUM) No CI.** Nothing runs tests or the code style checker.
   → GitHub Actions workflow (Pint + Pest).
 
-- [ ] **OPS-4 (MEDIUM) `README.md` is the Laravel boilerplate.** No setup,
+- [x] **OPS-4 (MEDIUM) `README.md` is the Laravel boilerplate.** No setup,
   roles, endpoints or deployment steps.
 
-- [ ] **OPS-5 (LOW) Seeder creates an admin with a hard-coded weak code
+- [x] **OPS-5 (LOW) Seeder creates an admin with a hard-coded weak code
   (`admin123`) and a personal e-mail.** → Read from env, refuse in production.
 
 ## 7. Tests
@@ -229,7 +236,7 @@ Severity:
 
 ## 8. Code hygiene
 
-- [ ] **HYG-1 (LOW) Dead code**: empty observer methods, empty
+- [x] **HYG-1 (LOW) Dead code**: empty observer methods, empty
   `StockService::__construct`, `RegisteredUserController` fully commented out,
   commented-out blocks in `StockMovementObserver`, `DatabaseSeeder`,
   `AuthenticatedSessionController`, broadcast boilerplate in
@@ -242,11 +249,11 @@ Severity:
   `'COMPLETED'`, `'PENDING'` …) repeated across controllers, observers and
   queries. → Constants on the models.
 
-- [ ] **HYG-4 (LOW) Inconsistent naming**: `lot_completed`, `validate_sale`,
+- [x] **HYG-4 (LOW) Inconsistent naming**: `lot_completed`, `validate_sale`,
   `annuler_sale`, `$movments`; mixed French/English. Kept French domain names,
   normalised method names to camelCase.
 
-- [ ] **HYG-5 (LOW) Code style not enforced** (Pint installed but never run;
+- [x] **HYG-5 (LOW) Code style not enforced** (Pint installed but never run;
   trailing spaces, mixed indentation).
 
 ---
@@ -262,4 +269,5 @@ Severity:
 | 4    | `fix/database-integrity`       | DB-1, DB-2, BUG-16, PERF-2 |
 | 5    | `chore/api-hardening`          | SEC-7, SEC-8, SEC-12, SEC-14, API-1, API-3, API-6, PERF-1, OPS-2 |
 | 6    | `test/feature-suite`           | TEST-1, TEST-2 (tests are also added in each step) |
+| 8    | `chore/dependency-security`    | SEC-15 |
 | 7    | `chore/ops-and-docs`           | OPS-1, OPS-3, OPS-4, OPS-5, HYG-1, HYG-4, HYG-5 |

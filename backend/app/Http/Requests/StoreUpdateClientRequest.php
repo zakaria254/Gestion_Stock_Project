@@ -25,9 +25,9 @@ class StoreUpdateClientRequest extends FormRequest
         return [
             'nom' => 'required|string|max:99',
             'adresse' => 'required|string|max:255',
-            'contact' => 'nullable|string|min:10|max:12|unique:clients,contact,'. $this->client?->id,
-            'email' => 'nullable|email|unique:clients,email,'. $this->client?->id,
-            'type' => 'nullable|in:boutique,entreprise,vente_local'
+            'contact' => 'nullable|string|min:10|max:12|unique:clients,contact,'.$this->client?->id,
+            'email' => 'nullable|email|unique:clients,email,'.$this->client?->id,
+            'type' => 'nullable|in:boutique,entreprise,vente_local',
         ];
     }
 }

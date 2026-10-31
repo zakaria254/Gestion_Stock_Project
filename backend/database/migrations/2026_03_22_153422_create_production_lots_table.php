@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('numero_lot')->unique();
             $table->foreignId('article_id')->constrained()->onDelete('cascade');
-            $table->decimal('quantite',10,2);
+            $table->decimal('quantite', 10, 2);
             $table->enum('status', ['AVAILABLE', 'IN_PROGRESS', 'COMPLETED']);
             $table->date('date_production');
             $table->string('certificat_abattage');

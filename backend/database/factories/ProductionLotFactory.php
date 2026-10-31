@@ -19,9 +19,8 @@ class ProductionLotFactory extends Factory
     public function definition(): array
     {
         return [
-            // 'numero_lot' => 'LOT-'. date('Y') .'-'. fake()->unique()->numerify('####'),
-            'numero_lot' => fake()->unique()->bothify('LOT-'. fake()->date('Y') .'-####'),
-            //automatically create an article for the lot if no article is passed to it 
+            'numero_lot' => fake()->unique()->bothify('LOT-'.fake()->date('Y').'-####'),
+            // automatically create an article for the lot if no article is passed to it
             'article_id' => Article::factory(),
             'quantite' => fake()->randomFloat(2, 10, 1000),
             'status' => fake()->randomElement(['AVAILABLE', 'IN_PROGRESS', 'COMPLETED']),
