@@ -26,7 +26,7 @@ class StoreUpdateStockMovementRequest extends FormRequest
             'stock_id' => 'required|exists:stocks,id',
             'type' => 'required|in:in,out',
             'quantite' => 'required|decimal:0,2|gt:0',
-            'motif' => 'required|string|max:99'
+            'motif' => 'required|string|max:99',
         ];
     }
 }

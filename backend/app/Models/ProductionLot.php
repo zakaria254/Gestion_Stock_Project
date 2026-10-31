@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use Database\Factories\ProductionLotFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class ProductionLot extends Model
 {
-    /** @use HasFactory<\Database\Factories\ProductionLotFactory> */
+    /** @use HasFactory<ProductionLotFactory> */
     use HasFactory;
 
     public const STATUS_AVAILABLE = 'AVAILABLE';
@@ -22,10 +23,11 @@ class ProductionLot extends Model
         'quantite',
         'status',
         'date_production',
-        'certificat_abattage'
+        'certificat_abattage',
     ];
 
-    public function article () {
+    public function article()
+    {
         return $this->belongsTo(Article::class);
     }
 }

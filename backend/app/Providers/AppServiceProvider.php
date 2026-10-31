@@ -22,22 +22,18 @@ class AppServiceProvider extends ServiceProvider
     /**
      * Register any application services.
      */
-    public function register(): void
-    {
-        
-    }
+    public function register(): void {}
 
     /**
      * Bootstrap any application services.
      */
     public function boot(): void
     {
-        //app observers
+        // app observers
         Stock::observe(StockObserver::class);
         Article::observe(ArticleObserver::class);
         ProductionLot::observe(ProductionLotObserver::class);
         StockMovement::observe(StockMovementObserver::class);
-
 
         RateLimiter::for('api', function (Request $request) {
             return Limit::perMinute(120)->by($request->user()?->id ?: $request->ip());
@@ -48,7 +44,7 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(10)->by($request->ip());
         });
 
-        //app gates and permission
+        // app gates and permission
         Gate::define('admin_only', function (User $user) {
             return $user->role === User::ROLE_ADMIN;
         });
@@ -65,7 +61,4 @@ class AppServiceProvider extends ServiceProvider
             return in_array($user->role, [User::ROLE_ADMIN, User::ROLE_VENTES, User::ROLE_STOCK]);
         });
     }
-
 }
-
-

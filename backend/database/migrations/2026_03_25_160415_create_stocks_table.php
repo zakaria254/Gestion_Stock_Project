@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('stocks', function (Blueprint $table) {
             $table->id();
             $table->foreignId('article_id')->unique()->constrained()->onDelete('cascade');
-            $table->decimal('stock_actuel',10,2)->default(0);
-            $table->decimal('seuil_minimun',8,2)->default(20);
+            $table->decimal('stock_actuel', 10, 2)->default(0);
+            $table->decimal('seuil_minimun', 8, 2)->default(20);
             $table->string('status')->default('Rupture');
             $table->timestamps();
         });

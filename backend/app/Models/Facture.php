@@ -17,14 +17,14 @@ class Facture extends Model
         'sale_id',
         'status',
         'montant_total',
-        'date_payment'
+        'date_payment',
     ];
 
     protected $casts = [
         'montant_total' => 'decimal:2',
-        'date_payment' => 'datetime'
+        'date_payment' => 'datetime',
     ];
-    
+
     public function sale()
     {
         return $this->belongsTo(Sale::class);

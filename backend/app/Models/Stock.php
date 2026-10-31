@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use Database\Factories\StockFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Stock extends Model
 {
-    /** @use HasFactory<\Database\Factories\StockFactory> */
+    /** @use HasFactory<StockFactory> */
     use HasFactory;
 
     public const STATUS_DISPONIBLE = 'Disponible';
@@ -20,14 +21,16 @@ class Stock extends Model
         'article_id',
         'stock_actuel',
         'seuil_minimun',
-        'status'
+        'status',
     ];
 
-    public function article () {
+    public function article()
+    {
         return $this->belongsTo(Article::class);
     }
 
-    public function stock_movements () {
+    public function stock_movements()
+    {
         return $this->hasMany(StockMovement::class);
     }
 }

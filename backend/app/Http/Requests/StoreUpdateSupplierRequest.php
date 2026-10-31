@@ -25,8 +25,8 @@ class StoreUpdateSupplierRequest extends FormRequest
         return [
             'nom' => 'required|string|max:99',
             'adresse' => 'required|string|max:255',
-            'contact' => 'nullable|string|min:10|max:12|unique:suppliers,contact,'. $this->supplier?->id,
-            'email' => 'nullable|email|max:255|unique:suppliers,email,'. $this->supplier?->id,
+            'contact' => 'nullable|string|min:10|max:12|unique:suppliers,contact,'.$this->supplier?->id,
+            'email' => 'nullable|email|max:255|unique:suppliers,email,'.$this->supplier?->id,
         ];
     }
 }

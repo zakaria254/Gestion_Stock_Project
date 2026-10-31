@@ -16,8 +16,8 @@ return new class extends Migration
             $table->string('nom');
             $table->text('adresse');
             $table->string('email')->unique()->nullable();
-            $table->string('contact',50)->unique()->nullable();
-            $table->enum('type', ["boutique", "entreprise", "vente_local" ])->nullable();
+            $table->string('contact', 50)->unique()->nullable();
+            $table->enum('type', ['boutique', 'entreprise', 'vente_local'])->nullable();
             $table->timestamps();
         });
     }

@@ -21,7 +21,7 @@ class StockResource extends JsonResource
             'stock_actuel' => $this->stock_actuel,
             'seuil_minimun' => $this->seuil_minimun,
             'status' => $this->status,
-            'created_at' => $this->created_at->format('Y-m-d H:i:s')
+            'created_at' => $this->created_at->format('Y-m-d H:i:s'),
         ];
     }
 }

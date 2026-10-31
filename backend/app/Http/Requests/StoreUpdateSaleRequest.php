@@ -25,7 +25,7 @@ class StoreUpdateSaleRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'numero' => 'required|string|min:5|max:20|unique:sales,numero,' . $this->sale?->id,
+            'numero' => 'required|string|min:5|max:20|unique:sales,numero,'.$this->sale?->id,
             'client_id' => 'required|exists:clients,id',
             'adresse_livraison' => 'nullable|string|max:255',
             // a sale can be validated right away on create; on update the status is ignored
@@ -38,7 +38,7 @@ class StoreUpdateSaleRequest extends FormRequest
             'articles' => 'required|array|min:1',
             'articles.*.id' => 'required|distinct|exists:articles,id',
             'articles.*.quantite' => 'required|numeric|gt:0',
-            'articles.*.prix_unitaire' => 'required|numeric|gt:0'
+            'articles.*.prix_unitaire' => 'required|numeric|gt:0',
         ];
     }
 }

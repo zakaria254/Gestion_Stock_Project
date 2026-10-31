@@ -15,7 +15,7 @@ class StockMovementResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id' => $this->id, 
+            'id' => $this->id,
             'stock' => new StockResource($this->whenLoaded('stock')),
             'type' => $this->type,
             'quantite' => $this->quantite,

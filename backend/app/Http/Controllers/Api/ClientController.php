@@ -7,7 +7,6 @@ use App\Http\Requests\StoreUpdateClientRequest;
 use App\Http\Resources\ClientResource;
 use App\Models\Client;
 
-
 class ClientController extends Controller
 {
     /**
