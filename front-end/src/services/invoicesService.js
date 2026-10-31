@@ -12,12 +12,12 @@ export const invoicesService = {
   },
 
   markAsPaid: async (id) => {
-    const response = await api.get(`/factures/${id}/paid`);
+    const response = await api.post(`/factures/${id}/paid`);
     return response.data?.data || response.data;
   },
 
   markAsUnpaid: async (id) => {
-    const response = await api.get(`/factures/${id}/unpaid`);
+    const response = await api.post(`/factures/${id}/unpaid`);
     return response.data?.data || response.data;
   },
 

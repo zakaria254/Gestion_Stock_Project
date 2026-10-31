@@ -52,7 +52,7 @@ Severity:
 - [ ] **SEC-8 (MEDIUM) No rate limiting on the API.** Only the login request has
   a manual throttle. → `throttle:api` on all API routes + named login limiter.
 
-- [ ] **SEC-9 (MEDIUM) State-changing actions use `GET`**
+- [x] **SEC-9 (MEDIUM) State-changing actions use `GET`**
   (`/sales/validate/{id}`, `/sales/annuler/{id}`, `/factures/{id}/paid|unpaid`,
   `/production_lots/completed/{id}`). GET must be safe/idempotent: prefetchers,
   crawlers, link previews or a retried request can validate a sale and move stock.
@@ -97,41 +97,41 @@ Severity:
 - [x] **BUG-5 (HIGH) Updating a movement's `stock_id` is not handled** — the
   observer applies the delta to the *new* stock and never restores the old one.
 
-- [ ] **BUG-6 (HIGH) Sale created directly as `Validee` gets no invoice.** The
+- [x] **BUG-6 (HIGH) Sale created directly as `Validee` gets no invoice.** The
   invoice is created in `SaleObserver::updated`, which never runs on create.
   Stock is decremented but no `Facture` exists.
 
-- [ ] **BUG-7 (HIGH) `PUT /sales/{id}` can set `status = Validee`**, bypassing the
+- [x] **BUG-7 (HIGH) `PUT /sales/{id}` can set `status = Validee`**, bypassing the
   validation workflow: the invoice is created by the observer but stock is
   **never** decremented. It can also set any free-text status
   (`status: nullable|string|max:30`).
   → Status is not editable through update; only the dedicated actions change it.
 
-- [ ] **BUG-8 (HIGH) `POST /sales` without `status` crashes** (`Undefined array
+- [x] **BUG-8 (HIGH) `POST /sales` without `status` crashes** (`Undefined array
   key "status"` because the field is `nullable`). → Use a default.
 
-- [ ] **BUG-9 (HIGH) Removing an article from a sale on update has no effect.**
+- [x] **BUG-9 (HIGH) Removing an article from a sale on update has no effect.**
   `syncWithoutDetaching` never detaches lines, but `montant_total` is recomputed
   from the request → the stored total and the stored lines disagree.
   → `sync()`.
 
-- [ ] **BUG-10 (HIGH) Duplicate article lines in a sale.** Sending the same
+- [x] **BUG-10 (HIGH) Duplicate article lines in a sale.** Sending the same
   article twice silently creates two pivot rows (create) or keeps the last one
   (update). → `distinct` validation rule.
 
-- [ ] **BUG-11 (MEDIUM) Invoice number may collide.** `FAC-YYYYMMDD-<random 4
+- [x] **BUG-11 (MEDIUM) Invoice number may collide.** `FAC-YYYYMMDD-<random 4
   digits>` on a unique column → random 500 errors as volume grows.
   → Derive the number from the invoice id.
 
-- [ ] **BUG-12 (MEDIUM) VAT rate (20%) hard-coded** in `SaleObserver`.
+- [x] **BUG-12 (MEDIUM) VAT rate (20%) hard-coded** in `SaleObserver`.
   → `config('stock.tva_rate')`.
 
-- [ ] **BUG-13 (MEDIUM) Sale validation not atomic with the invoice**: invoice is
+- [x] **BUG-13 (MEDIUM) Sale validation not atomic with the invoice**: invoice is
   created in an observer and stock in an event listener; logic is spread across
   3 classes and partially outside the transaction for `annuler`.
   → Single `SaleService` with one transaction per action.
 
-- [ ] **BUG-14 (MEDIUM) Status checks are not done under a lock**: two
+- [x] **BUG-14 (MEDIUM) Status checks are not done under a lock**: two
   simultaneous "validate" calls on the same sale both see `En attente` and
   decrement stock twice. Same for completing a production lot (stock added twice).
 
@@ -141,7 +141,7 @@ Severity:
 - [ ] **BUG-16 (MEDIUM) `sales.date_vente` default is frozen at migration time**
   (`->default(date('Y-m-d H:i:s'))` is evaluated once when the migration runs).
 
-- [ ] **BUG-17 (LOW) `SaleController::update` overwrites `user_id`** with the
+- [x] **BUG-17 (LOW) `SaleController::update` overwrites `user_id`** with the
   editor, losing who created the sale.
 
 ## 3. Data integrity (database)
@@ -167,7 +167,7 @@ Severity:
   `api/*` render HTML unless the client sends `Accept: application/json`.
   → `shouldRenderJsonWhen` for `api/*`.
 
-- [ ] **API-2 (MEDIUM) Wrong status codes.** Business-rule refusals ("this sale
+- [x] **API-2 (MEDIUM) Wrong status codes.** Business-rule refusals ("this sale
   can not be validated") return `403 Forbidden`; they are `409 Conflict`/`422`.
   `403` must mean "not allowed for your role".
 
@@ -176,7 +176,7 @@ Severity:
   `/production_lots/{id}`. The front-end calls `GET /sales/{id}` and
   `GET /factures/{id}`, which don't exist (404). → Implement `show`.
 
-- [ ] **API-4 (LOW) Typo `mesage` in a JSON error key** (`validate_sale`).
+- [x] **API-4 (LOW) Typo `mesage` in a JSON error key** (`validate_sale`).
 
 - [x] **API-5 (LOW) `UserResource::nom` merges `prenom + nom`**, so the edit form
   receives the full name in the `nom` field and has no `prenom`.
@@ -232,7 +232,7 @@ Severity:
 - [x] **HYG-2 (LOW) `new StockService` instantiated by hand** inside an observer,
   dynamic method call `$stock_service->$method(...)`. → Inject from the container.
 
-- [ ] **HYG-3 (LOW) Magic strings for statuses** (`'Validee'`, `'En attente'`,
+- [x] **HYG-3 (LOW) Magic strings for statuses** (`'Validee'`, `'En attente'`,
   `'COMPLETED'`, `'PENDING'` …) repeated across controllers, observers and
   queries. → Constants on the models.
 

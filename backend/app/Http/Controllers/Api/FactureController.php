@@ -2,83 +2,68 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Exceptions\InvalidStatusTransitionException;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\FactureResource;
 use App\Models\Facture;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class FactureController extends Controller
 {
+    private const RELATIONS = ['sale.client', 'sale.articles'];
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $factures = Facture::with('sale', 'sale.client', 'sale.articles')->latest()->paginate(12);
+        $factures = Facture::with(self::RELATIONS)->latest()->paginate(12);
 
         return FactureResource::collection($factures);
-    }
-
-    public function facturePaid (Facture $facture)
-    {
-        if ($facture->status === 'PENDING') {
-            $facture->update([
-                'status' => 'PAID',
-                'date_payment' => date('Y-m-d H:i:s'),
-            ]);
-             
-            return new FactureResource($facture);
-        }
-
-        return response()->json([
-            'message' => 'this facture can not be paid'
-        ], 403);
-    }
-
-    public function factureUnpaid (Facture $facture)
-    {
-        if ($facture->status === 'PENDING') {
-            $facture->update([
-                'status' => 'UNPAID',
-            ]);
-             
-            return new FactureResource($facture);
-        }
-
-        return response()->json([
-            'message' => 'this facture can not be unpaid'
-        ], 403);
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Facture $facture)
     {
-        //
+        return new FactureResource($facture->load(self::RELATIONS));
     }
 
     /**
-     * Update the specified resource in storage.
+     * A pending or unpaid invoice can be paid.
      */
-    public function update(Request $request, string $id)
+    public function markPaid(Facture $facture)
     {
-        //
+        $facture = $this->transition($facture, [Facture::STATUS_PENDING, Facture::STATUS_UNPAID], [
+            'status' => Facture::STATUS_PAID,
+            'date_payment' => now(),
+        ]);
+
+        return new FactureResource($facture->load(self::RELATIONS));
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    public function markUnpaid(Facture $facture)
     {
-        //
+        $facture = $this->transition($facture, [Facture::STATUS_PENDING], [
+            'status' => Facture::STATUS_UNPAID,
+        ]);
+
+        return new FactureResource($facture->load(self::RELATIONS));
+    }
+
+    private function transition(Facture $facture, array $from, array $changes): Facture
+    {
+        return DB::transaction(function () use ($facture, $from, $changes) {
+            $locked = Facture::whereKey($facture->id)->lockForUpdate()->firstOrFail();
+
+            if (! in_array($locked->status, $from)) {
+                throw new InvalidStatusTransitionException("This invoice is {$locked->status} and can not be changed to {$changes['status']}.");
+            }
+
+            $locked->update($changes);
+
+            return $locked;
+        });
     }
 }

@@ -10,6 +10,12 @@ class Sale extends Model
     /** @use HasFactory<\Database\Factories\SaleFactory> */
     use HasFactory;
 
+    public const STATUS_EN_ATTENTE = 'En attente';
+
+    public const STATUS_VALIDEE = 'Validee';
+
+    public const STATUS_ANNULEE = 'Annulee';
+
     protected $fillable = [
         'numero',
         'client_id',
@@ -22,6 +28,7 @@ class Sale extends Model
     ];
 
     protected $casts = [
+        'montant_total' => 'decimal:2',
         'date_vente' => 'datetime',
         'date_livraison' => 'datetime',
     ];

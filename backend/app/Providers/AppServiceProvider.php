@@ -4,13 +4,11 @@ namespace App\Providers;
 
 use App\Models\Article;
 use App\Models\ProductionLot;
-use App\Models\Sale;
 use App\Models\Stock;
 use App\Models\StockMovement;
 use App\Models\User;
 use App\Observers\ArticleObserver;
 use App\Observers\ProductionLotObserver;
-use App\Observers\SaleObserver;
 use App\Observers\StockMovementObserver;
 use App\Observers\StockObserver;
 use Illuminate\Support\Facades\Gate;
@@ -36,7 +34,6 @@ class AppServiceProvider extends ServiceProvider
         Article::observe(ArticleObserver::class);
         ProductionLot::observe(ProductionLotObserver::class);
         StockMovement::observe(StockMovementObserver::class);
-        Sale::observe(SaleObserver::class);
 
 
         //app gates and permission

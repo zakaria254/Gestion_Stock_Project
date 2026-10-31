@@ -6,6 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class Facture extends Model
 {
+    public const STATUS_PENDING = 'PENDING';
+
+    public const STATUS_PAID = 'PAID';
+
+    public const STATUS_UNPAID = 'UNPAID';
+
     protected $fillable = [
         'numero',
         'sale_id',
