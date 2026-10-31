@@ -2,15 +2,14 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Models\User;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
-use App\Models\User;
 
 class LoginRequest extends FormRequest
 {
@@ -36,19 +35,17 @@ class LoginRequest extends FormRequest
     }
 
     /**
-     * Attempt to authenticate the request's credentials.
+     * Check the credentials and return the matching user.
      *
      * @throws ValidationException
      */
-    public function authenticate(): void
+    public function authenticate(): User
     {
         $this->ensureIsNotRateLimited();
 
-        // Find the user by email first
         $user = User::where('email', $this->input('email'))->first();
 
-        // Then verify the access_code using Hash::check()
-        if (! $user || $this->input('access_code') !== $user->access_code) {
+        if (! $user || ! Hash::check($this->input('access_code'), $user->access_code)) {
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
@@ -56,10 +53,14 @@ class LoginRequest extends FormRequest
             ]);
         }
 
-        // Log the user in manually
-        Auth::login($user, $this->boolean('remember'));
-
         RateLimiter::clear($this->throttleKey());
+
+        // checked after the credentials so the account status isn't leaked to strangers
+        if (! $user->isActive()) {
+            abort(403, 'Account is inactive. Contact admin.');
+        }
+
+        return $user;
     }
 
     /**
@@ -90,6 +91,6 @@ class LoginRequest extends FormRequest
      */
     public function throttleKey(): string
     {
-        return Str::transliterate(Str::lower($this->input('email')).'|'.$this->ip());
+        return Str::transliterate(Str::lower($this->string('email')).'|'.$this->ip());
     }
 }

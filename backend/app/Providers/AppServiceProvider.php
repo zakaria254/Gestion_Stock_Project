@@ -7,12 +7,12 @@ use App\Models\ProductionLot;
 use App\Models\Sale;
 use App\Models\Stock;
 use App\Models\StockMovement;
+use App\Models\User;
 use App\Observers\ArticleObserver;
 use App\Observers\ProductionLotObserver;
 use App\Observers\SaleObserver;
 use App\Observers\StockMovementObserver;
 use App\Observers\StockObserver;
-use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -31,11 +31,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        ResetPassword::createUrlUsing(function (object $notifiable, string $token) {
-            return config('app.frontend_url')."/password-reset/$token?email={$notifiable->getEmailForPasswordReset()}";
-        });
-
-        
         //app observers
         Stock::observe(StockObserver::class);
         Article::observe(ArticleObserver::class);
@@ -45,20 +40,20 @@ class AppServiceProvider extends ServiceProvider
 
 
         //app gates and permission
-        Gate::define('admin_only', function ($user) {
-            return $user && $user->role === "admin" ;
+        Gate::define('admin_only', function (User $user) {
+            return $user->role === User::ROLE_ADMIN;
         });
 
-        Gate::define('ventes_admin_access', function ($user) {
-            return $user && in_array($user->role, ["admin", "ventes"]);
+        Gate::define('ventes_admin_access', function (User $user) {
+            return in_array($user->role, [User::ROLE_ADMIN, User::ROLE_VENTES]);
         });
 
-        Gate::define('stock_admin_access', function ($user) {
-            return $user && in_array($user->role, ["admin", "stock"]);
+        Gate::define('stock_admin_access', function (User $user) {
+            return in_array($user->role, [User::ROLE_ADMIN, User::ROLE_STOCK]);
         });
 
-        Gate::define('manage_articles', function ($user) {
-            return $user && in_array($user->role, ["admin", "ventes", "stock"]);
+        Gate::define('manage_articles', function (User $user) {
+            return in_array($user->role, [User::ROLE_ADMIN, User::ROLE_VENTES, User::ROLE_STOCK]);
         });
     }
 
