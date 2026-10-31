@@ -20,7 +20,8 @@ class StockMovementFactory extends Factory
     {
         return [
             'stock_id' => Stock::factory(),
-            'type' => fake()->randomElement(['in', 'out']),
+            // "out" could exceed the generated stock and be refused
+            'type' => 'in',
             'quantite' => fake()->numberBetween(40, 700),
             'motif' => fake()->randomElement(['Production', 'Vente', 'Perte', 'Annulation Vente']),
         ];
