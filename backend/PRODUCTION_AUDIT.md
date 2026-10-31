@@ -219,12 +219,12 @@ Severity:
 
 ## 7. Tests
 
-- [ ] **TEST-1 (HIGH) Zero tests for the actual application.** The only tests are
+- [x] **TEST-1 (HIGH) Zero tests for the actual application.** The only tests are
   Breeze leftovers that test a password/registration flow that doesn't exist;
   4 of 5 fail on `main`. → Delete them, add feature tests for auth, roles,
   stock movements, sales workflow, invoices.
 
-- [ ] **TEST-2 (LOW) Factories don't match the schema**: `UserFactory` misses
+- [x] **TEST-2 (LOW) Factories don't match the schema**: `UserFactory` misses
   `status`, generates 6-char codes (below new rule), `StockFactory` etc. unused.
 
 ## 8. Code hygiene
