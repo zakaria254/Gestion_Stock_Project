@@ -45,11 +45,11 @@ Severity:
 - [x] **SEC-6 (MEDIUM) Non-constant-time credential comparison** (`!==` in
   `LoginRequest::authenticate`). Fixed by `Hash::check()` (SEC-2).
 
-- [ ] **SEC-7 (MEDIUM) Sanctum tokens never expire** (`sanctum.expiration = null`)
+- [x] **SEC-7 (MEDIUM) Sanctum tokens never expire** (`sanctum.expiration = null`)
   and old tokens are never pruned. → Configurable expiration + scheduled
   `sanctum:prune-expired`.
 
-- [ ] **SEC-8 (MEDIUM) No rate limiting on the API.** Only the login request has
+- [x] **SEC-8 (MEDIUM) No rate limiting on the API.** Only the login request has
   a manual throttle. → `throttle:api` on all API routes + named login limiter.
 
 - [x] **SEC-9 (MEDIUM) State-changing actions use `GET`**
@@ -67,8 +67,14 @@ Severity:
 - [x] **SEC-11 (MEDIUM) An admin can delete or deactivate themselves / the last
   admin**, locking everyone out. → Guard in `UserController`.
 
-- [ ] **SEC-12 (MEDIUM) CORS origins are hard-coded to localhost** and `paths`
+- [x] **SEC-12 (MEDIUM) CORS origins are hard-coded to localhost** and `paths`
   is `*`. → Read allowed origins from env, restrict paths to `api/*`.
+
+- [x] **SEC-14 (HIGH) Sanctum "stateful SPA" middleware on a token-only API.**
+  `EnsureFrontendRequestsAreStateful` is prepended to every API route. As soon as
+  the production front-end domain is in `SANCTUM_STATEFUL_DOMAINS`/`FRONTEND_URL`,
+  its requests switch to cookie sessions + CSRF and every `POST` (login included)
+  fails with `419`. The front-end only uses Bearer tokens. → Remove it.
 
 - [x] **SEC-13 (LOW) The front-end logs the login payload (email + access code)
   to the console** (`front-end/src/services/auth.js`). → Remove the log.
@@ -163,7 +169,7 @@ Severity:
 
 ## 4. API quality / robustness
 
-- [ ] **API-1 (MEDIUM) Errors are not guaranteed to be JSON.** Exceptions on
+- [x] **API-1 (MEDIUM) Errors are not guaranteed to be JSON.** Exceptions on
   `api/*` render HTML unless the client sends `Accept: application/json`.
   → `shouldRenderJsonWhen` for `api/*`.
 
@@ -171,7 +177,7 @@ Severity:
   can not be validated") return `403 Forbidden`; they are `409 Conflict`/`422`.
   `403` must mean "not allowed for your role".
 
-- [ ] **API-3 (MEDIUM) Empty `show()` stubs** return `200` with an empty body on
+- [x] **API-3 (MEDIUM) Empty `show()` stubs** return `200` with an empty body on
   `GET /articles/{id}`, `/clients/{id}`, `/suppliers/{id}`, `/movements/{id}`,
   `/production_lots/{id}`. The front-end calls `GET /sales/{id}` and
   `GET /factures/{id}`, which don't exist (404). → Implement `show`.
@@ -182,12 +188,12 @@ Severity:
   receives the full name in the `nom` field and has no `prenom`.
   → Return `nom`, `prenom` and `full_name` separately.
 
-- [ ] **API-6 (LOW) Unbounded / fixed pagination** (always 12, not overridable).
+- [x] **API-6 (LOW) Unbounded / fixed pagination** (always 12, not overridable).
   → `per_page` query param capped at 100.
 
 ## 5. Performance
 
-- [ ] **PERF-1 (MEDIUM) Dashboard stock value computed in PHP** by loading every
+- [x] **PERF-1 (MEDIUM) Dashboard stock value computed in PHP** by loading every
   stock row; 7 separate queries for the 7-day chart. → Single SQL aggregates.
 
 - [x] **PERF-2 (LOW) Missing indexes** on columns used for filtering/aggregation:
@@ -199,7 +205,7 @@ Severity:
   `LOG_LEVEL=debug`, `APP_NAME=Laravel`, DB user `root`). No production template
   or deployment documentation.
 
-- [ ] **OPS-2 (MEDIUM) `app.frontend_url` is used but not defined** in
+- [x] **OPS-2 (MEDIUM) `app.frontend_url` is used but not defined** in
   `config/app.php` (reset-password links would be broken).
 
 - [ ] **OPS-3 (MEDIUM) No CI.** Nothing runs tests or the code style checker.
@@ -254,6 +260,6 @@ Severity:
 | 2    | `fix/stock-integrity`          | BUG-1…5, BUG-15, HYG-2 |
 | 3    | `fix/sales-workflow`           | BUG-6…14, BUG-17, SEC-9, API-2, API-4, HYG-3 |
 | 4    | `fix/database-integrity`       | DB-1, DB-2, BUG-16, PERF-2 |
-| 5    | `chore/api-hardening`          | SEC-7, SEC-8, SEC-12, API-1, API-3, API-6, PERF-1, OPS-2 |
+| 5    | `chore/api-hardening`          | SEC-7, SEC-8, SEC-12, SEC-14, API-1, API-3, API-6, PERF-1, OPS-2 |
 | 6    | `test/feature-suite`           | TEST-1, TEST-2 (tests are also added in each step) |
 | 7    | `chore/ops-and-docs`           | OPS-1, OPS-3, OPS-4, OPS-5, HYG-1, HYG-4, HYG-5 |

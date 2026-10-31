@@ -17,7 +17,7 @@ class FactureController extends Controller
      */
     public function index()
     {
-        $factures = Facture::with(self::RELATIONS)->latest()->paginate(12);
+        $factures = Facture::with(self::RELATIONS)->latest()->paginate($this->perPage());
 
         return FactureResource::collection($factures);
     }

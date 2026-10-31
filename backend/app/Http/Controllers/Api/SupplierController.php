@@ -14,7 +14,7 @@ class SupplierController extends Controller
      */
     public function index()
     {
-        $suppliers = Supplier::latest()->paginate(12);
+        $suppliers = Supplier::latest()->paginate($this->perPage());
         
         return SupplierResource::collection($suppliers);
     }
@@ -33,9 +33,9 @@ class SupplierController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Supplier $supplier)
     {
-        //
+        return new SupplierResource($supplier);
     }
 
     /**

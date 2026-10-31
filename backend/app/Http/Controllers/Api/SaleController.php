@@ -19,7 +19,7 @@ class SaleController extends Controller
      */
     public function index()
     {
-        $sales = Sale::with(self::RELATIONS)->latest()->paginate(12);
+        $sales = Sale::with(self::RELATIONS)->latest()->paginate($this->perPage());
 
         return SaleResource::collection($sales);
     }

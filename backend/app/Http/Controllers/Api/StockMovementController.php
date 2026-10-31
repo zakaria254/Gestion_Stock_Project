@@ -15,7 +15,7 @@ class StockMovementController extends Controller
      */
     public function index()
     {
-        $movements = StockMovement::with('stock.article')->latest()->paginate(12);
+        $movements = StockMovement::with('stock.article')->latest()->paginate($this->perPage());
 
         return StockMovementResource::collection($movements);
     }

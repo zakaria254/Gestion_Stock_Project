@@ -14,7 +14,7 @@ class ArticleController extends Controller
      */
     public function index()
     {
-        $articles = Article::latest()->with('stock')->paginate(12);
+        $articles = Article::latest()->with('stock')->paginate($this->perPage());
 
         return ArticleResource::collection($articles);
     }
@@ -33,9 +33,9 @@ class ArticleController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Article $article)
     {
-        //
+        return new ArticleResource($article->load('stock'));
     }
 
     /**
