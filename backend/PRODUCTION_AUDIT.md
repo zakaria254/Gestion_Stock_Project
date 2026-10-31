@@ -76,7 +76,7 @@ Severity:
   its requests switch to cookie sessions + CSRF and every `POST` (login included)
   fails with `419`. The front-end only uses Bearer tokens. → Remove it.
 
-- [ ] **SEC-15 (CRITICAL) Vulnerable dependencies.** `composer audit` reports 42
+- [x] **SEC-15 (CRITICAL) Vulnerable dependencies.** `composer audit` reports 42
   advisories in 11 locked packages, among them `laravel/framework` (critical
   TokenGuard authentication bypass, CRLF injection in the `email` rule),
   `symfony/http-foundation` (ReDoS via `Cache-Control`), `symfony/http-kernel`,
@@ -170,7 +170,7 @@ Severity:
   have a `down()` identical to `up()` (or that re-adds an existing column), so
   rollbacks fail or do nothing.
 
-- [ ] **DB-3 (LOW) Typo `seuil_minimun` vs `seuil_minimum`** between `stocks` and
+- [~] **DB-3 (LOW, deferred) Typo `seuil_minimun` vs `seuil_minimum`** between `stocks` and
   `articles`. Kept as-is (renaming is a breaking API change for the front-end),
   documented here.
 
@@ -258,6 +258,24 @@ Severity:
 
 ---
 
+## Follow-ups (not fixed here)
+
+- **DB-3**: renaming `seuil_minimun` is a breaking API change; do it together
+  with the front-end.
+- **Front-end lists only show the first page.** Every `getAll()` in
+  `front-end/src/services/*` ignores pagination (12 items). Needs pagination UI
+  or `?per_page=` (max 100).
+- **Front-end calls routes that don't exist on purpose**: `DELETE /factures/{id}`
+  (invoices are accounting records and must not be deletable).
+- **Front-end `baseURL` is hard-coded** to `http://localhost:8000/api`
+  (`front-end/src/services/api.js`). → `import.meta.env.VITE_API_URL`.
+- **Token stored in `localStorage`**: readable by any XSS. Acceptable with a strict
+  CSP; the alternative is Sanctum SPA cookie auth (a larger change).
+- **Migrations were verified on SQLite only** (tests + full up/down cycle). Run
+  them on a MySQL staging copy of the production data before deploying,
+  especially `2026_10_31_000001` (access-code hashing) and `2026_10_31_000002`
+  (foreign keys).
+
 ## Fix plan (one branch per step, merged into `main` with `--no-ff`)
 
 | Step | Branch                         | Issues |
@@ -269,5 +287,5 @@ Severity:
 | 4    | `fix/database-integrity`       | DB-1, DB-2, BUG-16, PERF-2 |
 | 5    | `chore/api-hardening`          | SEC-7, SEC-8, SEC-12, SEC-14, API-1, API-3, API-6, PERF-1, OPS-2 |
 | 6    | `test/feature-suite`           | TEST-1, TEST-2 (tests are also added in each step) |
-| 8    | `chore/dependency-security`    | SEC-15 |
 | 7    | `chore/ops-and-docs`           | OPS-1, OPS-3, OPS-4, OPS-5, HYG-1, HYG-4, HYG-5 |
+| 8    | `chore/dependency-security`    | SEC-15 |
