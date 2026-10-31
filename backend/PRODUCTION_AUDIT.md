@@ -16,33 +16,33 @@ Severity:
 
 ## 1. Security
 
-- [ ] **SEC-1 (CRITICAL) `GET /api/user` leaks the user's access code in clear text.**
+- [x] **SEC-1 (CRITICAL) `GET /api/user` leaks the user's access code in clear text.**
   The route returns the raw `User` model. `access_code` is cast as `encrypted`,
   so serialization *decrypts* it, and it is not in `#[Hidden]`.
   → Hide `access_code`, return `UserResource`.
 
-- [ ] **SEC-2 (CRITICAL) Access codes are stored reversibly and shown to admins.**
+- [x] **SEC-2 (CRITICAL) Access codes are stored reversibly and shown to admins.**
   `access_code` is `encrypted` (reversible with `APP_KEY`), `UserResource` returns
   it on every `/api/users` call. Credentials must be one-way hashed and never
   returned by the API.
   → Cast to `hashed`, compare with `Hash::check()`, data migration that re-hashes
   existing codes, drop it from `UserResource`.
 
-- [ ] **SEC-3 (HIGH) Access-code uniqueness is not enforced.**
+- [x] **SEC-3 (HIGH) Access-code uniqueness is not enforced.**
   `unique:users,access_code` compares the plaintext input against ciphertext, and
   encryption is non-deterministic, so neither the validator nor the DB unique
   index can ever detect a duplicate. (With hashing, uniqueness is no longer needed
   because login is email + code.)
 
-- [ ] **SEC-4 (HIGH) Inactive users can log in.** `status = inactive` is never
+- [x] **SEC-4 (HIGH) Inactive users can log in.** `status = inactive` is never
   checked at login, nor on already-issued tokens. The front-end even expects a
   `403` for this case.
 
-- [ ] **SEC-5 (HIGH) Weak access codes accepted.** Codes are exactly 6 chars with
+- [x] **SEC-5 (HIGH) Weak access codes accepted.** Codes are exactly 6 chars with
   no complexity rule; combined with SEC-2 this is the only credential.
   → Minimum 8 chars, letters + numbers.
 
-- [ ] **SEC-6 (MEDIUM) Non-constant-time credential comparison** (`!==` in
+- [x] **SEC-6 (MEDIUM) Non-constant-time credential comparison** (`!==` in
   `LoginRequest::authenticate`). Fixed by `Hash::check()` (SEC-2).
 
 - [ ] **SEC-7 (MEDIUM) Sanctum tokens never expire** (`sanctum.expiration = null`)
@@ -58,19 +58,19 @@ Severity:
   crawlers, link previews or a retried request can validate a sale and move stock.
   → `POST` endpoints (front-end updated accordingly).
 
-- [ ] **SEC-10 (MEDIUM) Leftover Breeze session routes in `routes/web.php`/`auth.php`**:
+- [x] **SEC-10 (MEDIUM) Leftover Breeze session routes in `routes/web.php`/`auth.php`**:
   a second `/login` (session based, CSRF), `/register` pointing to an empty
   controller (500), password-reset and e-mail verification routes for a flow that
   doesn't exist (no `password` column, no `app.frontend_url` config). Pure attack
   surface. → Remove.
 
-- [ ] **SEC-11 (MEDIUM) An admin can delete or deactivate themselves / the last
+- [x] **SEC-11 (MEDIUM) An admin can delete or deactivate themselves / the last
   admin**, locking everyone out. → Guard in `UserController`.
 
 - [ ] **SEC-12 (MEDIUM) CORS origins are hard-coded to localhost** and `paths`
   is `*`. → Read allowed origins from env, restrict paths to `api/*`.
 
-- [ ] **SEC-13 (LOW) The front-end logs the login payload (email + access code)
+- [x] **SEC-13 (LOW) The front-end logs the login payload (email + access code)
   to the console** (`front-end/src/services/auth.js`). → Remove the log.
 
 ## 2. Business logic / data correctness
@@ -178,7 +178,7 @@ Severity:
 
 - [ ] **API-4 (LOW) Typo `mesage` in a JSON error key** (`validate_sale`).
 
-- [ ] **API-5 (LOW) `UserResource::nom` merges `prenom + nom`**, so the edit form
+- [x] **API-5 (LOW) `UserResource::nom` merges `prenom + nom`**, so the edit form
   receives the full name in the `nom` field and has no `prenom`.
   → Return `nom`, `prenom` and `full_name` separately.
 

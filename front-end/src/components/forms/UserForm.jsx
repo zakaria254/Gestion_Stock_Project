@@ -31,7 +31,8 @@ export default function UserForm({ isOpen, onClose, onSubmit, user = null, isLoa
         nom: user.nom ? String(user.nom) : '',
         prenom: user.prenom ? String(user.prenom) : '',
         email: user.email || '',
-        access_code: user.access_code || '',
+        // the API never returns the code; leave empty to keep the current one
+        access_code: '',
         role: user.role || 'ventes',
         status: user.status || 'active',
       })
@@ -52,7 +53,10 @@ export default function UserForm({ isOpen, onClose, onSubmit, user = null, isLoa
     const newErrors = {}
     if (!formData.nom.trim()) newErrors.nom = 'Le nom est requis'
     if (!formData.prenom.trim()) newErrors.prenom = 'Le prénom est requis'
-    if (!formData.access_code.trim()) newErrors.access_code = 'Le code d\'accès est requis'
+    if (!user && !formData.access_code.trim()) newErrors.access_code = 'Le code d\'accès est requis'
+    if (formData.access_code && !/^(?=.*[A-Za-z])(?=.*\d).{8,}$/.test(formData.access_code)) {
+      newErrors.access_code = 'Au moins 8 caractères, avec des lettres et des chiffres'
+    }
     if (!formData.email.trim()) {
       newErrors.email = "L'email est requis"
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
@@ -179,7 +183,7 @@ export default function UserForm({ isOpen, onClose, onSubmit, user = null, isLoa
               className={`w-full px-3 py-2 bg-background border rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent ${
                 errors.access_code ? 'border-destructive' : 'border-border'
               }`}
-              placeholder="Entrez le code d'accès"
+              placeholder={user ? 'Laisser vide pour conserver le code actuel' : "Entrez le code d'accès"}
             />
             {errors.access_code && (
               <p className="mt-1 text-xs text-destructive">{errors.access_code}</p>

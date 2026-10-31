@@ -3,7 +3,6 @@ import { api } from './api'
 export const authService = {
   async login(email, accessCode) {
     try {
-      console.log('Login Payload:', { email, access_code: accessCode })
       // Send exactly what Laravel's AuthenticatedSessionController expects
       const response = await api.post('/login', { email, access_code: accessCode })
       const token = response.data.token || response.data.access_token

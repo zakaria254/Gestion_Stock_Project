@@ -8,7 +8,6 @@ use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Http\Request;
 
-
 class UserController extends Controller
 {
     /**
@@ -19,13 +18,12 @@ class UserController extends Controller
         $query = User::query();
 
         if ($request->filled('status')) {
-            $query->where('status', $request['status']);
+            $query->where('status', $request->string('status'));
         }
 
         $users = $query->latest()->paginate(12);
 
         return UserResource::collection($users);
-
     }
 
     /**
@@ -33,20 +31,42 @@ class UserController extends Controller
      */
     public function store(StoreUpdateUserRequest $request)
     {
-        $validated = $request->validated();
-        $user = User::create($validated);
-        
+        $user = User::create($request->userData());
+
         return (new UserResource($user))->response()->setStatusCode(201);
     }
 
+    /**
+     * Display the specified resource.
+     */
+    public function show(User $user)
+    {
+        return new UserResource($user);
+    }
 
     /**
      * Update the specified resource in storage.
      */
     public function update(StoreUpdateUserRequest $request, User $user)
     {
-        $validated = $request->validated();
-        $user->update($validated);
+        $data = $request->userData();
+
+        $losesAdminAccess = $user->isAdmin()
+            && (($data['role'] ?? $user->role) !== User::ROLE_ADMIN
+                || ($data['status'] ?? $user->status) !== User::STATUS_ACTIVE);
+
+        if ($losesAdminAccess && $this->isLastActiveAdmin($user)) {
+            return response()->json([
+                'message' => 'The last active admin can not be demoted or deactivated.',
+            ], 409);
+        }
+
+        $user->update($data);
+
+        // a deactivated account or a new access code must end the existing sessions
+        if (! $user->isActive() || $user->wasChanged('access_code')) {
+            $user->tokens()->delete();
+        }
 
         return new UserResource($user);
     }
@@ -54,10 +74,31 @@ class UserController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(User $user)
-    {   
+    public function destroy(Request $request, User $user)
+    {
+        if ($user->is($request->user())) {
+            return response()->json([
+                'message' => 'You can not delete your own account.',
+            ], 409);
+        }
+
+        if ($user->isAdmin() && $this->isLastActiveAdmin($user)) {
+            return response()->json([
+                'message' => 'The last active admin can not be deleted.',
+            ], 409);
+        }
+
+        $user->tokens()->delete();
         $user->delete();
 
-        return response()->json([], 204);
+        return response()->noContent();
+    }
+
+    private function isLastActiveAdmin(User $user): bool
+    {
+        return ! User::where('role', User::ROLE_ADMIN)
+            ->where('status', User::STATUS_ACTIVE)
+            ->whereKeyNot($user->id)
+            ->exists();
     }
 }

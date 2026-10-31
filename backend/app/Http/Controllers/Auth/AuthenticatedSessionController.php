@@ -4,24 +4,21 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Http\Resources\UserResource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Auth;
 
 class AuthenticatedSessionController extends Controller
 {
     /**
-     * Handle an incoming authentication request.
+     * Issue an API token for valid credentials.
      */
     public function store(LoginRequest $request): JsonResponse
     {
-        $request->authenticate();
+        $user = $request->authenticate();
 
-        $user = Auth::user();
         $token = $user->createToken('auth_token')->plainTextToken;
-
-        // $request->session()->regenerate();
 
         return response()->json([
             'token' => $token,
@@ -29,18 +26,18 @@ class AuthenticatedSessionController extends Controller
     }
 
     /**
-     * Destroy an authenticated session.
+     * Return the authenticated user.
+     */
+    public function show(Request $request): array
+    {
+        return (new UserResource($request->user()))->resolve($request);
+    }
+
+    /**
+     * Revoke the token used for the current request.
      */
     public function destroy(Request $request): Response
     {
-        // Auth::guard('web')->logout();
-
-        // $request->session()->invalidate();
-
-        // $request->session()->regenerateToken();
-
-        // return response()->noContent();
-
         $request->user()->currentAccessToken()->delete();
 
         return response()->noContent();

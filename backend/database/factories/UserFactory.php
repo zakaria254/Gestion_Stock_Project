@@ -12,9 +12,9 @@ use Illuminate\Support\Str;
 class UserFactory extends Factory
 {
     /**
-     * The current password being used by the factory.
+     * Plain access code given to every factory user (hashed by the model cast).
      */
-    protected static ?string $password;
+    public const ACCESS_CODE = 'Code1234';
 
     /**
      * Define the model's default state.
@@ -28,10 +28,26 @@ class UserFactory extends Factory
             'prenom' => fake()->lastName(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
-            'access_code' => strtoupper(fake()->bothify('???###')),
-            'role' => fake()->randomElement(['ventes', 'stock']),
+            'access_code' => self::ACCESS_CODE,
+            'role' => fake()->randomElement([User::ROLE_VENTES, User::ROLE_STOCK]),
+            'status' => User::STATUS_ACTIVE,
             'remember_token' => Str::random(10),
         ];
+    }
+
+    public function admin(): static
+    {
+        return $this->state(fn (array $attributes) => ['role' => User::ROLE_ADMIN]);
+    }
+
+    public function role(string $role): static
+    {
+        return $this->state(fn (array $attributes) => ['role' => $role]);
+    }
+
+    public function inactive(): static
+    {
+        return $this->state(fn (array $attributes) => ['status' => User::STATUS_INACTIVE]);
     }
 
     /**
