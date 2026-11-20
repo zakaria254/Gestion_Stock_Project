@@ -214,13 +214,13 @@ export default function InvoicesPage() {
   )
 
   return (
-    <div className="space-y-8">
-      <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Gestion des Factures</h1>
+    <div className="space-y-6 sm:space-y-8">
+      <div className="bg-white p-5 sm:p-8 rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm flex justify-between items-center gap-4">
+        <div className="min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">Gestion des Factures</h1>
           <p className="text-slate-500 mt-2 font-medium">Consultez, téléchargez et gérez vos documents comptables <span className="text-primary font-bold">HOUATNOUR</span></p>
         </div>
-        <div className="h-12 w-12 bg-primary/10 rounded-2xl flex items-center justify-center">
+        <div className="hidden sm:flex h-12 w-12 shrink-0 bg-primary/10 rounded-2xl items-center justify-center">
           <Printer className="text-primary w-6 h-6" />
         </div>
       </div>

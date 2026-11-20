@@ -351,7 +351,7 @@ export default function SalesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Ventes</h1>
           <p className="text-muted-foreground mt-1">
@@ -360,7 +360,7 @@ export default function SalesPage() {
         </div>
         <button
           onClick={handleCreateNew}
-          className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-xl font-medium hover:bg-primary/90 transition-colors"
+          className="flex items-center justify-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-xl font-medium hover:bg-primary/90 transition-colors"
         >
           <Plus className="w-5 h-5" />
           Nouvelle Vente

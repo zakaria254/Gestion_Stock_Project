@@ -31,6 +31,7 @@ class DatabaseSeeder extends Seeder
             ClientSeeder::class,
             ProductionLotSeeder::class,
             StockMovementSeeder::class,
+            SaleSeeder::class, // also creates sale_article lines and factures
         ]);
     }
 

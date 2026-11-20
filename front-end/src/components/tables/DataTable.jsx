@@ -40,7 +40,7 @@ export default function DataTable({
     <div className="bg-card rounded-xl border border-border overflow-hidden">
       {/* Search Bar */}
       <div className="p-4 border-b border-border">
-        <div className="relative max-w-sm">
+        <div className="relative w-full sm:max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <input
             type="text"
@@ -60,13 +60,13 @@ export default function DataTable({
               {columns.map((column) => (
                 <th
                   key={column.key}
-                  className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider"
+                  className="px-3 sm:px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap"
                 >
                   {column.label}
                 </th>
               ))}
               {renderActions && (
-                <th className="px-4 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                <th className="px-3 sm:px-4 py-3 text-right whitespace-nowrap text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   Actions
                 </th>
               )}
@@ -89,12 +89,12 @@ export default function DataTable({
                   className="hover:bg-muted/30 transition-colors"
                 >
                   {columns.map((column) => (
-                    <td key={column.key} className="px-4 py-3 text-sm text-foreground">
+                    <td key={column.key} className="px-3 sm:px-4 py-3 text-sm text-foreground">
                       {column.render ? column.render(item) : item[column.key]}
                     </td>
                   ))}
                   {renderActions && (
-                    <td className="px-4 py-3 text-right">
+                    <td className="px-3 sm:px-4 py-3 text-right whitespace-nowrap">
                       <div className="flex items-center justify-end gap-2">
                         {renderActions(item)}
                       </div>
@@ -109,8 +109,8 @@ export default function DataTable({
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="px-4 py-3 border-t border-border flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">
+        <div className="px-4 py-3 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-2">
+          <p className="text-xs sm:text-sm text-muted-foreground text-center sm:text-left">
             Affichage de {startIndex + 1} à {Math.min(startIndex + pageSize, filteredData.length)} sur {filteredData.length} résultats
           </p>
           <div className="flex items-center gap-2">

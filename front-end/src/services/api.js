@@ -25,10 +25,15 @@ api.interceptors.response.use(
       // Don't intercept 401 responses ON the login call itself
       const requestUrl = error.config?.url || ''
       if (!requestUrl.includes('/login')) {
+        // Clear BOTH token and user: AuthContext decides "logged in" from `user`,
+        // so leaving it behind makes the app think the session is still valid,
+        // re-request the API, get 401 again and reload forever.
         localStorage.removeItem('token')
-        // Use replace to root so React Router's auth guard redirects to /login
-        // NEVER use window.location.href = '/login' — that sends GET to Laravel (405!)
-        window.location.replace('/')
+        localStorage.removeItem('user')
+        // Avoid reloading when we're already on the login page
+        if (window.location.pathname !== '/login') {
+          window.location.replace('/login')
+        }
       }
     }
     return Promise.reject(error)

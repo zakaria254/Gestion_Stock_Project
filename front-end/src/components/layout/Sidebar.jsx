@@ -105,7 +105,7 @@ export default function Sidebar({ isOpen, onClose }) {
       {/* Sidebar */}
       <aside
         className={cn(
-          'fixed top-0 left-0 z-50 h-full w-64 bg-card border-r border-border transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:z-0 flex flex-col',
+          'fixed top-0 left-0 z-50 h-full w-64 bg-card border-r border-border transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:sticky lg:top-0 lg:h-screen lg:z-0 shrink-0 flex flex-col',
           isOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
