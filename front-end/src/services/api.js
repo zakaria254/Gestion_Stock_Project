@@ -660,9 +660,10 @@ export const dashboardService = {
       facturesImpayees: data.unpaidFactures || 0,
       totalFournisseurs: data.supplierCount || 0,
       stockNegatif: 0, // Not yet in backend
-      evolutionVentes: data.evolutionVentes || [],
-      repartitionStock: data.repartitionStock || [],
-      topArticles: data.topArticles || [],
+      // MySQL decimals arrive as strings; Recharts needs numbers or the pie stays empty
+      evolutionVentes: (data.evolutionVentes || []).map(d => ({ ...d, ventes: Number(d.ventes) })),
+      repartitionStock: (data.repartitionStock || []).map(d => ({ ...d, quantite: Number(d.quantite) })),
+      topArticles: (data.topArticles || []).map(d => ({ ...d, quantite: Number(d.quantite) })),
     }
   },
 
