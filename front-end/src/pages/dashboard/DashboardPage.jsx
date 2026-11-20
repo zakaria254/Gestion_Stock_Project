@@ -86,7 +86,7 @@ export default function DashboardPage() {
         <KpiCard
           icon={TrendingUp}
           label="Ventes Validées (Mois)"
-          value={`${Number(stats?.ventesValideesMois || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2 })} MAD`}
+          value={`${Number(stats?.ventesValideesMois || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MAD`}
           sub="Ventes VALIDÉE ce mois"
           color="text-green-600"
           bg="bg-green-100"
@@ -94,7 +94,7 @@ export default function DashboardPage() {
         <KpiCard
           icon={Package}
           label="Valeur du Stock"
-          value={`${Number(stats?.valeurStock || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2 })} MAD`}
+          value={`${Number(stats?.valeurStock || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MAD`}
           sub="Prix × Quantité disponible"
           color="text-blue-600"
           bg="bg-blue-100"
@@ -231,7 +231,7 @@ export default function DashboardPage() {
               <span className="text-muted-foreground">Commandes validées (mois)</span>
               <span className="font-semibold text-foreground">
                 {(stats?.ventesValideesMois || 0) > 0
-                  ? `${Number(stats.ventesValideesMois).toLocaleString('fr-FR', { minimumFractionDigits: 2 })} MAD`
+                  ? `${Number(stats.ventesValideesMois).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MAD`
                   : '—'}
               </span>
             </div>
@@ -262,7 +262,7 @@ export default function DashboardPage() {
             <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
               <span className="text-muted-foreground">Valeur totale du stock</span>
               <span className="font-semibold text-blue-600">
-                {Number(stats?.valeurStock || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2 })} MAD
+                {Number(stats?.valeurStock || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MAD
               </span>
             </div>
           </div>
