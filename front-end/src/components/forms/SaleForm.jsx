@@ -415,7 +415,7 @@ export default function SaleForm({
 
             {/* Cart Data Table */}
             {items.length > 0 && (
-              <div className="border border-border rounded-lg overflow-hidden relative">
+              <div className="border border-border rounded-lg overflow-x-auto relative">
                 <table className="w-full text-sm text-left text-muted-foreground">
                   <thead className="text-xs text-foreground uppercase bg-muted">
                     <tr>

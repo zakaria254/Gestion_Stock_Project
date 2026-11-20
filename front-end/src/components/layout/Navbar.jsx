@@ -71,7 +71,7 @@ export default function Navbar({ onMenuClick }) {
   }
 
   return (
-    <header className="h-16 bg-card border-b border-border flex items-center justify-between px-4 lg:px-6">
+    <header className="sticky top-0 z-30 h-16 bg-card border-b border-border flex items-center justify-between px-3 sm:px-4 lg:px-6">
       {/* Left side */}
       <div className="flex items-center gap-4">
         <button
@@ -86,7 +86,7 @@ export default function Navbar({ onMenuClick }) {
       </div>
 
       {/* Right side */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-1 sm:gap-3">
         {/* Notifications */}
         <div className="relative">
           <button 
@@ -105,7 +105,7 @@ export default function Navbar({ onMenuClick }) {
           {isNotifOpen && (
             <>
               <div className="fixed inset-0 z-40" onClick={() => setIsNotifOpen(false)} />
-              <div className="absolute right-0 mt-2 w-80 bg-card rounded-xl border border-border shadow-lg z-50 overflow-hidden flex flex-col">
+              <div className="fixed left-3 right-3 top-16 mt-2 sm:absolute sm:left-auto sm:right-0 sm:top-auto sm:w-80 bg-card rounded-xl border border-border shadow-lg z-50 overflow-hidden flex flex-col">
                 <div className="p-3 border-b border-border flex justify-between items-center bg-muted/30">
                   <h3 className="text-sm font-semibold text-card-foreground">Notifications</h3>
                   {unreadCount > 0 && (
@@ -203,8 +203,8 @@ export default function Navbar({ onMenuClick }) {
 
       {/* Global Toast Component */}
       {toast && (
-        <div className="fixed bottom-4 right-4 z-[100] animate-in slide-in-from-bottom-5 fade-in duration-300">
-          <div className="bg-card border border-border shadow-2xl rounded-xl p-4 flex items-start gap-3 w-80">
+        <div className="fixed bottom-4 left-4 right-4 sm:left-auto z-[100] animate-in slide-in-from-bottom-5 fade-in duration-300">
+          <div className="bg-card border border-border shadow-2xl rounded-xl p-4 flex items-start gap-3 w-full sm:w-80">
             <div className="mt-0.5">
               {toast.type === 'success' && <CheckCircle className="w-5 h-5 text-green-500" />}
               {toast.type === 'warning' && <AlertTriangle className="w-5 h-5 text-yellow-500" />}

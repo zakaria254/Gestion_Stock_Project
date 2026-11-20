@@ -67,7 +67,7 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Tableau de Bord &mdash; HOUATNOUR</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-foreground">Tableau de Bord &mdash; HOUATNOUR</h1>
         <p className="text-muted-foreground mt-1">Vue d&apos;ensemble de votre activité</p>
       </div>
 
